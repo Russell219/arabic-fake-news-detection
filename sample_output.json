@@ -1,0 +1,59 @@
+{
+  "claim": "السيسي باع سيناء للإسرائيليين",
+  "dialect": "CAI",
+  "dialect_confidence": 0.998,
+  "query_used": "السيسي باع سيناء للاسرائيليين",
+  "verdict_signal": "POSSIBLE_FAKE",
+  "bucket_a": [
+    {
+      "claim": "نظام السيسي قدم لمجلس النواب تشريع يشرع بيع قناة السويس",
+      "similarity": 0.916,
+      "label": "FALSE",
+      "source": "saheeh_masr",
+      "debunk": "لا يوجد أي تشريع من هذا القبيل تم تقديمه أو مناقشته في البرلمان المصري. هذه المعلومة مضللة ولا أساس لها من الصحة."
+    }
+  ],
+  "bucket_b": [
+    {
+      "proposition": "أكد المسؤولون المصريون أن سيناء جزء لا يتجزأ من الأراضي المصرية",
+      "title": "سيناء في الخطاب الرسمي المصري",
+      "source": "Wikipedia_AR",
+      "hybrid_score": 0.821,
+      "bm25_score": 0.743,
+      "arabert_score": 0.869
+    },
+    {
+      "proposition": "وقد أعلن الرئيس السيسي مراراً أن سيناء ستظل أرضاً مصرية إلى الأبد",
+      "title": "سيناء في الخطاب الرسمي المصري",
+      "source": "BBC_Arabic",
+      "hybrid_score": 0.784,
+      "bm25_score": 0.701,
+      "arabert_score": 0.832
+    },
+    {
+      "proposition": "وأكد وزير الخارجية المصري أن أي ادعاءات ببيع الأراضي المصرية هي أكاذيب مدفوعة سياسياً",
+      "title": "مصر ترد على الشائعات",
+      "source": "AlJazeera_Main",
+      "hybrid_score": 0.751,
+      "bm25_score": 0.689,
+      "arabert_score": 0.798
+    }
+  ],
+  "bucket_b_searched": true,
+  "_schema_version": "1.0",
+  "_notes": {
+    "verdict_signal_values": [
+      "HIGH_FAKE_MATCH",
+      "HIGH_TRUE_MATCH",
+      "HIGH_PARTIAL_MATCH",
+      "POSSIBLE_FAKE",
+      "POSSIBLE_TRUE",
+      "POSSIBLE_MATCH",
+      "EVIDENCE_FOUND",
+      "LOW_CONFIDENCE"
+    ],
+    "bucket_a_label_values": ["TRUE", "FALSE", "PARTIALLY_TRUE"],
+    "dialect_values": ["CAI", "MSA"],
+    "usage": "Run NLI on (claim, proposition) pairs from bucket_b. Weight by hybrid_score. If bucket_a has HIGH_FAKE_MATCH or HIGH_TRUE_MATCH, trust it directly and skip NLI."
+  }
+}

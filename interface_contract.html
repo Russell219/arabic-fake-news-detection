@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System 2 ↔ Cyber — Interface Contract</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #F1F5F9;
+    padding: 44px 36px;
+    min-height: 100vh;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 22px;
+    font-weight: 700;
+    color: #0F172A;
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+
+  .subtitle {
+    text-align: center;
+    font-size: 13px;
+    color: #64748B;
+    margin-bottom: 40px;
+  }
+
+  /* ── Top-level layout ── */
+  .pipeline {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0;
+  }
+
+  /* ── Generic card ── */
+  .card {
+    border-radius: 14px;
+    padding: 22px 20px;
+    border: 2.5px solid;
+  }
+
+  .card-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1.5px solid currentColor;
+  }
+
+  .step {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .step:last-child { margin-bottom: 0; }
+
+  .step-num {
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: white;
+  }
+
+  .step-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1E293B;
+    line-height: 1.4;
+  }
+  .step-sub {
+    font-size: 11.5px;
+    color: #475569;
+    margin-top: 3px;
+    line-height: 1.55;
+  }
+  .step-arabic {
+    font-family: 'Cairo', sans-serif;
+    font-size: 13.5px;
+    color: #1E293B;
+    direction: rtl;
+    margin-top: 5px;
+    line-height: 1.7;
+    background: rgba(255,255,255,0.65);
+    border-radius: 7px;
+    padding: 5px 10px;
+  }
+
+  /* ── Arrow ── */
+  .arrow-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 52px;
+    width: 60px;
+    flex-shrink: 0;
+  }
+  .arrow-label {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #94A3B8;
+    margin-bottom: 5px;
+    text-align: center;
+    letter-spacing: 0.3px;
+  }
+  .arrow-line {
+    width: 100%;
+    display: flex;
+    align-items: center;
+  }
+  .arrow-line hr {
+    flex: 1;
+    border: none;
+    border-top: 2.5px solid #CBD5E1;
+  }
+  .arrow-head {
+    width: 0; height: 0;
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-left: 10px solid #CBD5E1;
+    flex-shrink: 0;
+  }
+
+  /* ── INPUT ── */
+  .card-input {
+    background: #FFFBEB;
+    border-color: #F59E0B;
+    width: 190px;
+    flex-shrink: 0;
+  }
+  .card-input .card-title { color: #92400E; }
+
+  /* ── SYSTEM 2 ── */
+  .card-s2 {
+    background: #EFF6FF;
+    border-color: #3B82F6;
+    width: 240px;
+    flex-shrink: 0;
+  }
+  .card-s2 .card-title { color: #1D4ED8; }
+  .card-s2 .step-num  { background: #3B82F6; }
+
+  /* ── JSON ── */
+  .card-json {
+    background: #F0FDF4;
+    border-color: #10B981;
+    width: 270px;
+    flex-shrink: 0;
+  }
+  .card-json .card-title { color: #065F46; }
+
+  .json-block {
+    background: #ffffff;
+    border: 1.5px solid #A7F3D0;
+    border-radius: 9px;
+    padding: 12px 14px;
+    font-family: 'Fira Code', monospace;
+    font-size: 11.5px;
+    line-height: 1.85;
+    color: #1E293B;
+  }
+  .jk  { color: #065F46; font-weight: 600; }       /* key */
+  .jv  { color: #374151; }                          /* value */
+  .js  { color: #7C3AED; font-weight: 600; }        /* signal */
+  .ji  { color: #6B7280; padding-left: 14px; display: block; font-size: 11px; } /* indent */
+  .jd  { border: none; border-top: 1px dashed #A7F3D0; margin: 6px 0; }
+
+  /* ── CYBER ── */
+  .card-cyber {
+    background: #F5F3FF;
+    border-color: #8B5CF6;
+    width: 240px;
+    flex-shrink: 0;
+  }
+  .card-cyber .card-title { color: #5B21B6; }
+  .card-cyber .step-num  { background: #8B5CF6; }
+
+  /* ── OUTPUT ── */
+  .card-output {
+    background: #FDF4FF;
+    border-color: #A855F7;
+    width: 210px;
+    flex-shrink: 0;
+  }
+  .card-output .card-title { color: #6B21A8; }
+
+  .out-block {
+    background: #fff;
+    border: 1.5px solid #E9D5FF;
+    border-radius: 9px;
+    padding: 12px 14px;
+    font-family: 'Fira Code', monospace;
+    font-size: 11.5px;
+    line-height: 1.85;
+    color: #1E293B;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    margin-top: 32px;
+    font-size: 12.5px;
+    color: #64748B;
+    font-style: italic;
+    background: white;
+    display: inline-block;
+    padding: 10px 24px;
+    border-radius: 999px;
+    border: 1.5px solid #E2E8F0;
+    width: 100%;
+  }
+  .footer strong { color: #0F172A; font-style: normal; }
+</style>
+</head>
+<body>
+
+<h1>System 2 ↔ Cyber Teammate — Interface Contract</h1>
+<p class="subtitle">Claim in → System 2 retrieves evidence → Cyber decides verdict</p>
+
+<div class="pipeline">
+
+  <!-- INPUT -->
+  <div class="card card-input">
+    <div class="card-title" style="color:#92400E;">Input Claim</div>
+
+    <div class="step">
+      <div class="step-body">
+        <div class="step-label" style="color:#92400E;">Any Arabic claim</div>
+        <div class="step-sub">MSA or Egyptian dialect</div>
+        <div class="step-arabic">مفيش دليل إن فيروس كورونا اتعمل في مختبر</div>
+        <div class="step-sub" style="margin-top:8px;">or</div>
+        <div class="step-arabic">السيسي باع سيناء للإسرائيليين</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARROW 1 -->
+  <div class="arrow-wrap">
+    <div class="arrow-label">claim text</div>
+    <div class="arrow-line"><hr><div class="arrow-head"></div></div>
+  </div>
+
+  <!-- SYSTEM 2 -->
+  <div class="card card-s2">
+    <div class="card-title" style="color:#1D4ED8;">System 2 — Russell (RAG Engine)</div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-label">Dialect Detection</div>
+        <div class="step-sub">CAMeL classifier<br>CAI label = Egyptian Arabic</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-label">Normalize EGY → MSA</div>
+        <div class="step-sub">EGY_TO_MSA dictionary</div>
+        <div class="step-arabic" style="font-size:12.5px;">
+          مفيش &rarr; لا يوجد<br>
+          اتعمل &rarr; صُنع<br>
+          ده &rarr; هذا
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-label">Bucket A — Known Fakes</div>
+        <div class="step-sub">AraBERT cosine similarity<br>vs 10,000+ labeled fake claims</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <div class="step-label">Bucket B — Truth KB</div>
+        <div class="step-sub">Hybrid BM25 + AraBERT<br>26,630 docs (propositions + AraFacts)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARROW 2 -->
+  <div class="arrow-wrap">
+    <div class="arrow-label">JSON output</div>
+    <div class="arrow-line"><hr><div class="arrow-head"></div></div>
+  </div>
+
+  <!-- JSON CONTRACT -->
+  <div class="card card-json">
+    <div class="card-title">JSON Contract (System 2 → Cyber)</div>
+
+    <div class="json-block">
+      <span class="jk">"claim"</span><span class="jv">:       original text</span><br>
+      <span class="jk">"dialect"</span><span class="jv">:     "CAI"</span><br>
+      <span class="jk">"query_used"</span><span class="jv">:  MSA version</span>
+      <hr class="jd">
+      <span class="js">"verdict_signal"</span><span class="jv">: one of</span><br>
+      <span class="ji">HIGH_FAKE_MATCH   ≥ 0.90</span>
+      <span class="ji">POSSIBLE_FAKE     ≥ 0.82</span>
+      <span class="ji">EVIDENCE_FOUND    ≥ 0.70</span>
+      <span class="ji">LOW_CONFIDENCE</span>
+      <hr class="jd">
+      <span class="jk">"bucket_a"</span><span class="jv">: [ {</span><br>
+      <span class="ji">claim, similarity,</span>
+      <span class="ji">source, debunk</span>
+      <span class="jv">} ]</span>
+      <hr class="jd">
+      <span class="jk">"bucket_b"</span><span class="jv">: [ {</span><br>
+      <span class="ji">proposition, title,</span>
+      <span class="ji">hybrid_score</span>
+      <span class="jv">} ]</span>
+    </div>
+  </div>
+
+  <!-- ARROW 3 -->
+  <div class="arrow-wrap">
+    <div class="arrow-label">passed to</div>
+    <div class="arrow-line"><hr><div class="arrow-head"></div></div>
+  </div>
+
+  <!-- CYBER -->
+  <div class="card card-cyber">
+    <div class="card-title" style="color:#5B21B6;">Cyber Teammate (Verdict Engine)</div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-label">Arabic NLI / Stance</div>
+        <div class="step-sub">For each (claim, evidence) pair:</div>
+        <div class="step-arabic" style="direction:ltr; font-family:'Inter'; font-size:12px; font-weight:600; color:#5B21B6;">
+          SUPPORTS &nbsp;/&nbsp; REFUTES &nbsp;/&nbsp; NEUTRAL
+        </div>
+        <div class="step-sub" style="margin-top:5px;">
+          Model: xlm-roberta-large-xnli<br>
+          or CAMeL Arabic NLI
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-label">Aggregate Stances</div>
+        <div class="step-sub">
+          Combine stance votes<br>
+          + similarity scores<br>
+          + verdict_signal as prior
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-label">Final Verdict Decision</div>
+        <div class="step-sub">Owns TRUE / FALSE / UNVERIFIED<br>Cyber is responsible for this step</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARROW 4 -->
+  <div class="arrow-wrap" style="padding-top:120px;">
+    <div class="arrow-label">verdict</div>
+    <div class="arrow-line"><hr><div class="arrow-head"></div></div>
+  </div>
+
+  <!-- OUTPUT -->
+  <div class="card card-output">
+    <div class="card-title" style="color:#6B21A8;">Final Output</div>
+    <div class="out-block">
+      <span class="jk" style="color:#6B21A8;">"final_verdict"</span><span class="jv">:</span><br>
+      <span style="padding-left:14px; display:block; color:#DC2626; font-weight:700;">FALSE</span>
+      <hr class="jd" style="border-color:#E9D5FF;">
+      <span class="jk" style="color:#6B21A8;">"confidence"</span><span class="jv">: 0.82</span>
+      <hr class="jd" style="border-color:#E9D5FF;">
+      <span class="jk" style="color:#6B21A8;">"stance_breakdown"</span><br>
+      <span style="padding-left:14px; display:block; color:#6B7280; font-size:11px;">[ { evidence, stance,<br>&nbsp;&nbsp;score } ]</span>
+      <hr class="jd" style="border-color:#E9D5FF;">
+      <span class="jk" style="color:#6B21A8;">"reason"</span><span class="jv">:<br></span>
+      <span style="padding-left:14px; display:block; color:#374151; font-size:11px;">"High match to known<br> fake + evidence<br> contradicts claim"</span>
+    </div>
+  </div>
+
+</div>
+
+<div style="text-align:center; margin-top:28px;">
+  <span class="footer">
+    <strong>System 2</strong> never outputs TRUE / FALSE — only retrieval signals &amp; evidence. &nbsp;|&nbsp;
+    <strong>Cyber teammate</strong> owns the final verdict.
+  </span>
+</div>
+
+</body>
+</html>
