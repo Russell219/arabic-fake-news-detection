@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "System 2 RAG Engine Output Schema",
+  "description": "Output schema for Russell's RAG fact-verification engine, to be consumed by System 3 (Youssef's Verdict Engine). Includes System 1's classifier signal as a pass-through field for downstream fusion.",
+  "type": "object",
+  "properties": {
+    "claim": {
+      "type": "string",
+      "description": "The original Arabic claim being investigated."
+    },
+    "dialect": {
+      "type": "string",
+      "description": "Detected Arabic dialect code (e.g. 'MSA', 'CAI' for Egyptian, 'DOH' for Gulf — not limited to a fixed enum; the underlying classifier (CAMeL-Lab dialect model) supports multiple dialect codes)."
+    },
+    "dialect_confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "query_used": {
+      "type": "string",
+      "description": "The (possibly normalized) query actually sent to retrieval."
+    },
+    "verdict_signal": {
+      "type": "string",
+      "enum": [
+        "HIGH_FAKE_MATCH", "HIGH_TRUE_MATCH", "HIGH_PARTIAL_MATCH",
+        "POSSIBLE_FAKE", "POSSIBLE_TRUE", "POSSIBLE_MATCH",
+        "EVIDENCE_FOUND", "LOW_CONFIDENCE"
+      ],
+      "description": "Categorical retrieval-confidence signal driving the final_verdict."
+    },
+    "final_verdict": {
+      "type": "string",
+      "enum": ["TRUE", "FALSE", "UNVERIFIED"],
+      "description": "This system's own verdict. System 3 may agree, override, or fuse this with classifier_signal."
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "This system's confidence in final_verdict."
+    },
+    "bucket_a": {
+      "type": "array",
+      "description": "Matches from the verified-claims database (AraFacts + Saheeh Masr).",
+      "items": {
+        "type": "object",
+        "properties": {
+          "claim":      { "type": "string" },
+          "similarity": { "type": "number", "minimum": 0, "maximum": 1 },
+          "label":      { "type": "string", "enum": ["TRUE", "FALSE", "PARTLY_FALSE", "SARCASM", "UNVERIFIABLE", "UNKNOWN"] },
+          "source":     { "type": "string" },
+          "dialect":    { "type": "string" },
+          "debunk":     { "type": "string", "description": "Truncated to 200 chars. Often an EMPTY STRING for saheeh_masr-sourced entries — that dataset doesn't include description/debunk text the way AraFacts does. Do not treat an empty debunk as evidence of anything; check 'source' before relying on this field." }
+        },
+        "required": ["claim", "similarity", "label", "source"]
+      }
+    },
+    "bucket_b": {
+      "type": "array",
+      "description": "Evidence propositions from the live news knowledge base (28,800+ propositions, 7 RSS sources, auto-updated every 4h).",
+      "items": {
+        "type": "object",
+        "properties": {
+          "proposition":         { "type": "string" },
+          "proposition_display": { "type": "string", "description": "Decontextualized version. Only present on the top-ranked hit; falls back to 'proposition' if decontextualization was unavailable." },
+          "title":               { "type": "string" },
+          "source":              { "type": "string" },
+          "hybrid_score":        { "type": "number", "description": "RRF fusion score (BM25 rank + E5 rank). Typical range ~0.005-0.04 — NOT a [0,1] confidence, do not use as a normalized weight." },
+          "bm25_rank":           { "type": "integer", "description": "1-based BM25 rank (lower = better match). NOT a score." },
+          "e5_rank":             { "type": "integer", "description": "1-based E5-large embedding rank (lower = better match). NOT a score." },
+          "rerank_score":        { "type": "number", "description": "Cross-encoder relevance score. Typical range ~-8 to +10. F1-calibrated threshold for 'real evidence' is > 2.0 (see Reranker_Calibration_Report.md). This is the recommended field for weighting evidence strength, not hybrid_score." }
+        },
+        "required": ["proposition", "title", "source", "hybrid_score", "bm25_rank", "e5_rank", "rerank_score"]
+      }
+    },
+    "bucket_b_searched": {
+      "type": "boolean",
+      "description": "False only when a HIGH-tier Bucket A match short-circuited the pipeline."
+    },
+    "classifier_signal": {
+      "type": ["object", "null"],
+      "description": "System 1's (Sarah's) raw classifier output, passed through unmodified. Fusion with this system's own final_verdict is intentionally NOT performed here — it happens downstream in System 3, per both systems' design.",
+      "properties": {
+        "label":         { "type": "string", "enum": ["real", "fake"] },
+        "label_id":      { "type": "integer", "enum": [0, 1] },
+        "confidence":    { "type": "number", "minimum": 0, "maximum": 1 },
+        "probabilities": {
+          "type": "object",
+          "properties": {
+            "real": { "type": "number" },
+            "fake": { "type": "number" }
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "claim", "dialect", "dialect_confidence", "query_used",
+    "verdict_signal", "final_verdict", "confidence",
+    "bucket_a", "bucket_b", "bucket_b_searched"
+  ],
+  "_changelog": {
+    "vs_v1_schema": [
+      "bm25_score/arabert_score (floats, [0,1]) replaced by bm25_rank/e5_rank (integer ranks) — retrieval upgraded from AraBERT weighted-sum to E5-large + RRF fusion.",
+      "Added rerank_score — cross-encoder score, F1-calibrated, the recommended field for evidence-weighting (NOT hybrid_score, which is now a tiny RRF value, not a [0,1] score).",
+      "Added final_verdict and confidence at top level (this system's own verdict, separate from System 3's fused verdict).",
+      "Added classifier_signal — System 1's raw output, passed through unmodified for downstream fusion.",
+      "Added proposition_display — decontextualized top evidence text.",
+      "Query reformulation/retry was removed after testing showed it never had a fair case to help on (Bucket B coverage gaps cannot be fixed by rewording a query) — reformulated_query/retry_triggered fields no longer exist."
+    ]
+  }
+}

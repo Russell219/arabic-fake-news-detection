@@ -5,3 +5,4 @@ __pycache__/
 .env
 *.npy
 proposition_vectors.npy
+.env
