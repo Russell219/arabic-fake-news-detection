@@ -15,7 +15,10 @@ Flow:
     raw_ratio  →  prior adjustment  →  clamped adjusted_ratio
            │
            ▼
-    verdict  +  confidence  +  reasoning_summary
+    LOW_CONFIDENCE override  (force UNVERIFIED / cap confidence / set flag)
+           │
+           ▼
+    verdict  +  confidence  +  reasoning_summary  +  evidence_sparse
 """
 
 from typing import List, Tuple
@@ -54,9 +57,11 @@ class StanceAggregator:
 
     Design notes
     ------------
-    * Scores passed in via ``StanceDetail.score`` are already
-      ``hybrid_score``-weighted by the caller (the verdict engine), so the
-      aggregator treats them as pre-weighted evidence strengths.
+    * Scores passed in via ``StanceDetail.score`` are rerank_score values
+      normalised to [0, 1] by the caller (verdict engine).  The aggregator
+      treats them as pre-weighted evidence strengths.
+    * Only propositions with rerank_score > 2.0 (F1-calibrated threshold)
+      are passed in — filtering happens upstream in verdict_engine.py.
     * The prior nudges the ratio by at most ±0.20 (prior × 0.2 weight),
       keeping retrieval signal influential without overriding NLI evidence.
     * Confidence is deliberately capped at 0.95 — the system should never
@@ -71,7 +76,7 @@ class StanceAggregator:
         self,
         stances: List[StanceDetail],
         verdict_signal: str,
-    ) -> Tuple[str, float, str]:
+    ) -> Tuple[str, float, str, bool]:
         """
         Aggregate NLI stance details into a final verdict.
 
@@ -82,10 +87,12 @@ class StanceAggregator:
                              Used to look up the prior in ``SIGNAL_PRIORS``.
 
         Returns:
-            A 3-tuple of:
+            A 4-tuple of:
                 verdict           (str)   — "TRUE", "FALSE", or "UNVERIFIED"
                 confidence        (float) — calibrated score in (0, 0.95]
                 reasoning_summary (str)   — compact debug string
+                evidence_sparse   (bool)  — True when LOW_CONFIDENCE signal
+                                            triggered sparse-evidence handling
         """
         # ----------------------------------------------------------------
         # 1. Accumulate stance scores
@@ -147,7 +154,7 @@ class StanceAggregator:
 
         confidence = (
             0.5
-            + (distance        * 0.3)
+            + (distance         * 0.3)
             + (evidence_quality * 0.2)
             + unanimity_bonus
         )
@@ -156,7 +163,33 @@ class StanceAggregator:
         confidence = min(confidence, 0.95)
 
         # ----------------------------------------------------------------
-        # 6. Reasoning summary
+        # 6. LOW_CONFIDENCE signal overrides
+        #
+        # When Russell signals LOW_CONFIDENCE, the retrieval layer itself
+        # is uncertain.  We apply two overrides regardless of what the NLI
+        # math produced:
+        #
+        #   a) Sparse evidence (< 3 evaluated propositions):
+        #      Force verdict to UNVERIFIED — not enough data to decide.
+        #
+        #   b) Always cap confidence at 0.65 — even strong, unanimous NLI
+        #      evidence cannot overcome Russell's retrieval uncertainty.
+        # ----------------------------------------------------------------
+        evidence_sparse = False
+
+        if verdict_signal == "LOW_CONFIDENCE":
+            evidence_sparse = True
+            total_evaluated = len(stances)
+
+            # Override (a): too few propositions → force UNVERIFIED
+            if total_evaluated < 3:
+                verdict = "UNVERIFIED"
+
+            # Override (b): cap confidence regardless of math result
+            confidence = min(confidence, 0.65)
+
+        # ----------------------------------------------------------------
+        # 7. Reasoning summary
         # ----------------------------------------------------------------
         n_support = sum(1 for sd in stances if sd["stance"] == "SUPPORTS")
         n_refute  = sum(1 for sd in stances if sd["stance"] == "REFUTES")
@@ -168,7 +201,8 @@ class StanceAggregator:
             f"refute={n_refute}, "
             f"neutral={n_neutral}, "
             f"raw_ratio={raw_ratio:.3f}, "
-            f"adjusted={adjusted_ratio:.3f}"
+            f"adjusted={adjusted_ratio:.3f}, "
+            f"evidence_sparse={evidence_sparse}"
         )
 
-        return verdict, round(confidence, 4), reasoning_summary
+        return verdict, round(confidence, 4), reasoning_summary, evidence_sparse
