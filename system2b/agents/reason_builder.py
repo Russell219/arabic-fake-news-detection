@@ -69,6 +69,7 @@ class ReasonBuilder:
         bucket_a_source: str,
         bucket_a_debunk: str,
         stance_breakdown: List[StanceDetail],
+        evidence_sparse: bool = False,
     ) -> str:
         """
         Construct a human-readable reason string for a final verdict.
@@ -83,6 +84,9 @@ class ReasonBuilder:
             bucket_a_debunk     : Debunking text / URL from the Bucket A hit.
             stance_breakdown    : List of ``StanceDetail`` dicts from NLI path
                                   (may be empty for Path 1).
+            evidence_sparse     : When True, a ⚠️ warning is appended alerting
+                                  the consumer that Russell's retrieval was
+                                  low-confidence and the verdict is unreliable.
 
         Returns:
             A single concatenated reason string.
@@ -107,6 +111,13 @@ class ReasonBuilder:
 
         # Part 4 — Verdict conclusion
         parts.append(self._build_verdict_conclusion(verdict))
+
+        # Part 5 — Sparse evidence warning (LOW_CONFIDENCE path only)
+        if evidence_sparse:
+            parts.append(
+                "⚠️ Warning: Russell retrieved sparse evidence. "
+                "Treat this verdict with caution."
+            )
 
         return " ".join(parts)
 
