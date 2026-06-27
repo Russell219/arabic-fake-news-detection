@@ -1,5 +1,5 @@
 """
-verdict_engine.py — Main orchestrator for the Verdict Engine (v2).
+verdict_engine.py — Main orchestrator for the Verdict Engine (v3).
 
 Wires together the NLI model, stance aggregator, reason builder, and
 System 1 classifier fusion into a single ``decide()`` call that consumes
@@ -9,19 +9,28 @@ Routing:
     HIGH_FAKE_MATCH / HIGH_TRUE_MATCH  +  non-empty bucket_a
         → Path 1  (fast path, no NLI, trust the fact-check DB directly)
 
-    All other signals  OR  empty bucket_a
+    bucket_b EMPTY (no qualified props after rerank filter)  [NEW v3]
+        → Path Bucket-A-Only  (conflict resolution hierarchy)
+          Uses bucket_a similarity tiers + classifier signal to decide.
+          No NLI run.
+
+    All other signals with qualified bucket_b props
         → Path 2  (NLI path over filtered bucket_b, then classifier fusion)
 
-Key v2 changes
+Key v3 changes
 --------------
-  - Evidence weighting: hybrid_score (tiny RRF float) → rerank_score
-    (cross-encoder, range ~-8 to +10), normalised to [0, 1].
-  - Evidence filtering: only propositions with rerank_score > 2.0 are
-    passed to NLI (F1-calibrated threshold from Reranker_Calibration_Report).
-  - Classifier fusion: System 1's classifier_signal is fused with the
-    NLI/RAG verdict.  Fusion rules are documented in _fuse_classifier().
-  - BucketAEntry labels updated: PARTLY_FALSE, SARCASM, UNVERIFIABLE, UNKNOWN.
-  - dialect field is now an open string (DOH, EGY, MSA, etc.).
+  - New _path_bucket_a_only(): fixes the bug where empty bucket_b always
+    produced UNVERIFIED even when solid bucket_a evidence existed.
+  - Conflict resolution hierarchy (4 rules) lives in aggregator.py.
+  - reason_builder.build_conflict_resolution() formats the reason string.
+
+Key v2 changes (still in effect)
+---------------------------------
+  - Evidence weighting: rerank_score (cross-encoder) replaces hybrid_score.
+  - Evidence filtering: rerank_score > 2.0 only.
+  - Classifier fusion via _fuse_classifier().
+  - BucketAEntry labels: PARTLY_FALSE, SARCASM, UNVERIFIABLE, UNKNOWN.
+  - dialect: open string (DOH, EGY, MSA, etc.).
 """
 
 from typing import List, Optional
@@ -34,7 +43,7 @@ from agents.schemas import (
     StanceDetail,
 )
 from agents.nli_model import ArabicNLIModel
-from agents.aggregator import StanceAggregator
+from agents.aggregator import StanceAggregator, _label_to_verdict
 from agents.reason_builder import ReasonBuilder
 
 # ---------------------------------------------------------------------------
@@ -77,25 +86,6 @@ def _normalise_rerank(rerank_score: float) -> float:
     """
     clipped = max(_RERANK_MIN, min(_RERANK_MAX, rerank_score))
     return (clipped - _RERANK_MIN) / (_RERANK_MAX - _RERANK_MIN)
-
-
-def _label_to_verdict(label: str) -> str:
-    """
-    Map a BucketAEntry label to a FinalOutput verdict string.
-
-    New v2 labels handled:
-        TRUE         → TRUE
-        FALSE        → FALSE
-        PARTLY_FALSE → UNVERIFIED  (partial; too nuanced to call FALSE)
-        SARCASM      → UNVERIFIED  (intent unclear without context)
-        UNVERIFIABLE → UNVERIFIED
-        UNKNOWN      → UNVERIFIED
-    """
-    if label == "TRUE":
-        return "TRUE"
-    if label == "FALSE":
-        return "FALSE"
-    return "UNVERIFIED"
 
 
 # ---------------------------------------------------------------------------
@@ -143,8 +133,21 @@ class VerdictEngine:
             "classifier_signal"
         )
 
+        # Path 1 — HIGH-confidence fact-check DB hit: skip NLI entirely.
         if verdict_signal in _FAST_PATH_SIGNALS and bucket_a:
             return self._path_one(bucket_a, verdict_signal, classifier_signal)
+
+        # Path Bucket-A-Only (v3) — bucket_b is empty but bucket_a or
+        # classifier may still give us a verdict.  Do NOT fall through to
+        # Path 2 and return UNVERIFIED by default.
+        qualified_props = [
+            p for p in bucket_b
+            if p.get("rerank_score", -999) > _RERANK_THRESHOLD
+        ]
+        if not qualified_props:
+            return self._path_bucket_a_only(
+                bucket_a, verdict_signal, classifier_signal
+            )
 
         return self._path_two(
             russell_json, bucket_a, bucket_b, verdict_signal, classifier_signal
@@ -199,6 +202,81 @@ class VerdictEngine:
         )
 
     # ------------------------------------------------------------------
+    # Path Bucket-A-Only (v3) — no qualified bucket_b propositions
+    # ------------------------------------------------------------------
+
+    def _path_bucket_a_only(
+        self,
+        bucket_a: List[BucketAEntry],
+        verdict_signal: str,
+        classifier_signal: Optional[ClassifierSignal],
+    ) -> FinalOutput:
+        """
+        Resolve verdict when bucket_b has no qualifying propositions.
+
+        Delegates to StanceAggregator.resolve_bucket_a_conflict() which
+        implements the four-rule hierarchy:
+
+            Rule 1  — solid bucket_a (sim >= 0.75): trust fact-check DB
+            Rule 2a — moderate bucket_a + confident disagreeing classifier:
+                       CONFLICT → UNVERIFIED
+            Rule 2b — moderate bucket_a + weak/agreeing classifier:
+                       trust fact-check DB at discounted confidence
+            Rule 3a — no bucket_a + confident classifier: use classifier
+            Rule 3b — nothing reliable: UNVERIFIED at 0.50
+
+        Args:
+            bucket_a          : Bucket A entries (may be empty).
+            verdict_signal    : Russell's retrieval signal.
+            classifier_signal : System 1's raw output (may be None).
+
+        Returns:
+            A ``FinalOutput`` dict.
+        """
+        clf_dict = dict(classifier_signal) if classifier_signal else None
+        resolution = self.aggregator.resolve_bucket_a_conflict(
+            bucket_a=bucket_a,
+            classifier_signal=clf_dict,
+        )
+
+        # Build the formatted reason string
+        clf_label = classifier_signal.get("label") if classifier_signal else None
+        clf_conf  = float(classifier_signal.get("confidence", 0.0)) if classifier_signal else 0.0
+        best_a    = max(bucket_a, key=lambda x: x["similarity"]) if bucket_a else None
+
+        reason = self.reason_builder.build_conflict_resolution(
+            rule=resolution.rule,
+            verdict=resolution.verdict,
+            bucket_a_similarity=best_a["similarity"] if best_a else 0.0,
+            bucket_a_source=best_a.get("source", "") if best_a else "",
+            clf_label=clf_label,
+            clf_confidence=clf_conf,
+            base_reason=resolution.reason,
+        )
+
+        # Build classifier_fusion metadata for transparency
+        fusion_meta = {
+            "used": resolution.rule in ("no_evidence_clf_strong",),
+            "label": clf_label,
+            "confidence": clf_conf if clf_label else None,
+            "effect": {
+                "solid_bucket_a":         "ignored",
+                "moderate_conflict":      "conflict",
+                "moderate_agree":         "ignored",
+                "no_evidence_clf_strong": "primary",
+                "no_evidence_clf_weak":   "ignored",
+            }.get(resolution.rule, "absent"),
+        }
+
+        return FinalOutput(
+            final_verdict=resolution.verdict,
+            confidence=resolution.confidence,
+            stance_breakdown=[],
+            reason=reason,
+            classifier_fusion=fusion_meta,
+        )
+
+    # ------------------------------------------------------------------
     # Path 2 — NLI path (run inference over filtered bucket_b)
     # ------------------------------------------------------------------
 
@@ -216,55 +294,18 @@ class VerdictEngine:
         """
         claim: str = russell_json["claim"]
 
-        # ----------------------------------------------------------------
-        # Filter: only keep propositions that pass the rerank threshold.
-        # rerank_score > 2.0 = F1-calibrated "real evidence" boundary.
-        # ----------------------------------------------------------------
+        # Rerank filter — already computed in decide() but re-derive here
+        # so _path_two stays self-contained and callable independently.
         qualified_props = [
             p for p in bucket_b
             if p.get("rerank_score", -999) > _RERANK_THRESHOLD
         ]
 
-        # ----------------------------------------------------------------
-        # Handle empty / no-qualified-evidence cases
-        # ----------------------------------------------------------------
+        # Sanity guard — should not happen since decide() routes empty
+        # qualified_props to _path_bucket_a_only, but handle defensively.
         if not qualified_props:
-            if verdict_signal == "LOW_CONFIDENCE":
-                verdict    = "UNVERIFIED"
-                confidence = 0.5
-                reason = (
-                    "Russell returned low confidence; evidence is sparse. "
-                    "No propositions passed the rerank quality threshold (> 2.0). "
-                    "Evidence is insufficient; verdict is uncertain. "
-                    "⚠️ Warning: Russell retrieved sparse evidence. "
-                    "Treat this verdict with caution."
-                )
-            else:
-                verdict    = "UNVERIFIED"
-                confidence = 0.1
-                reason = self.reason_builder.build(
-                    verdict="UNVERIFIED",
-                    verdict_signal=verdict_signal,
-                    bucket_a_present=bool(bucket_a),
-                    bucket_a_similarity=bucket_a[0]["similarity"] if bucket_a else 0.0,
-                    bucket_a_source=bucket_a[0]["source"] if bucket_a else "",
-                    bucket_a_debunk=bucket_a[0].get("debunk", "") or "N/A" if bucket_a else "",
-                    stance_breakdown=[],
-                    evidence_sparse=False,
-                )
-
-            verdict, confidence, fusion_meta, fusion_note = self._fuse_classifier(
-                verdict, confidence, classifier_signal
-            )
-            if fusion_note:
-                reason += f" {fusion_note}"
-
-            return FinalOutput(
-                final_verdict=verdict,
-                confidence=round(confidence, 4),
-                stance_breakdown=[],
-                reason=reason,
-                classifier_fusion=fusion_meta,
+            return self._path_bucket_a_only(
+                bucket_a, verdict_signal, classifier_signal
             )
 
         # ----------------------------------------------------------------
