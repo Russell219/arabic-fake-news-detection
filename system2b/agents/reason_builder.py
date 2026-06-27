@@ -11,7 +11,7 @@ The output string is stored in ``FinalOutput.reason`` and is intended
 for end-user display, logging, and audit trails.
 """
 
-from typing import List
+from typing import List, Optional
 
 from agents.schemas import StanceDetail
 
@@ -120,6 +120,51 @@ class ReasonBuilder:
             )
 
         return " ".join(parts)
+
+    def build_conflict_resolution(
+        self,
+        rule: str,
+        verdict: str,
+        bucket_a_similarity: float,
+        bucket_a_source: str,
+        clf_label: Optional[str],
+        clf_confidence: float,
+        base_reason: str,
+    ) -> str:
+        """
+        Build a human-readable reason string for conflict-resolution verdicts.
+
+        Called when bucket_b is empty and the verdict was determined by
+        ``StanceAggregator.resolve_bucket_a_conflict()``.
+
+        Args:
+            rule               : The rule key from ConflictResolution.rule.
+            verdict            : Final verdict string.
+            bucket_a_similarity: Similarity of the best Bucket A hit (0 if absent).
+            bucket_a_source    : Source of the best Bucket A hit ("" if absent).
+            clf_label          : Classifier label ("real"/"fake", or None).
+            clf_confidence     : Classifier confidence score.
+            base_reason        : The reason string already produced by the
+                                 aggregator (used as the core explanation).
+
+        Returns:
+            A single formatted reason string.
+        """
+        # The aggregator already computes a precise reason string per rule.
+        # Here we prepend a one-line summary tag for quick scanning in logs.
+        rule_tag = {
+            "solid_bucket_a":       "[Rule 1 — Solid Bucket A]",
+            "moderate_conflict":    "[Rule 2a — Moderate Conflict]",
+            "moderate_agree":       "[Rule 2b — Moderate + Agree]",
+            "no_evidence_clf_strong": "[Rule 3a — Classifier Only]",
+            "no_evidence_clf_weak": "[Rule 3b — No Evidence]",
+        }.get(rule, "[Conflict Resolution]")
+
+        verdict_tag = self._VERDICT_CONCLUSION.get(
+            verdict, "The verdict could not be determined."
+        )
+
+        return f"{rule_tag} {base_reason} {verdict_tag}"
 
     # ------------------------------------------------------------------
     # Private part builders
