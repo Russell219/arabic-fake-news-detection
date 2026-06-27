@@ -48,7 +48,7 @@ SIGNAL_PRIORS: dict[str, float] = {
     "POSSIBLE_TRUE":       0.3,
     "POSSIBLE_MATCH":      0.0,
     "EVIDENCE_FOUND":      0.1,
-    "LOW_CONFIDENCE":      0.0,
+    "LOW_CONFIDENCE":      -0.1,   # weak tilt toward uncertainty
 }
 
 # ---------------------------------------------------------------------------
@@ -107,23 +107,6 @@ class ConflictResolution(NamedTuple):
     rule:       str
     reason:     str
 
-# ---------------------------------------------------------------------------
-# Signal priors
-# ---------------------------------------------------------------------------
-
-SIGNAL_PRIORS: dict[str, float] = {
-    # Path 1 signals (won't normally reach Path 2, included for completeness)
-    "HIGH_FAKE_MATCH":    -1.0,
-    "HIGH_TRUE_MATCH":     1.0,
-    # Ambiguous / partial signals
-    "HIGH_PARTIAL_MATCH":  0.0,
-    "POSSIBLE_FAKE":      -0.3,
-    "POSSIBLE_TRUE":       0.3,
-    "POSSIBLE_MATCH":      0.0,
-    "EVIDENCE_FOUND":      0.1,
-    "LOW_CONFIDENCE":      0.0,
-}
-
 
 # ---------------------------------------------------------------------------
 # Aggregator
@@ -158,11 +141,19 @@ class StanceAggregator:
         self,
         bucket_a: List[BucketAEntry],
         classifier_signal: Optional[dict],
+        verdict_signal: str = "",
     ) -> ConflictResolution:
         """
         Resolve the verdict when bucket_b is empty (no NLI evidence).
 
-        Implements the four-rule hierarchy:
+        Implements the four-rule hierarchy, with a LOW_CONFIDENCE pre-check:
+
+        LOW_CONFIDENCE pre-check (NEW):
+            When Russell's own signal is LOW_CONFIDENCE, his retrieval is
+            unreliable regardless of what bucket_a shows.  Even solid bucket_a
+            matches are demoted — we cannot trust that the match is genuine if
+            Russell himself flagged low confidence.  Return UNVERIFIED at 0.50
+            with a warning, bypassing all rules.
 
         Rule 1 — SOLID BUCKET A (similarity >= 0.75):
             Fact-checked DB evidence is trustworthy.  Trust bucket_a.label
@@ -188,10 +179,32 @@ class StanceAggregator:
         Args:
             bucket_a          : List of BucketAEntry dicts (may be empty).
             classifier_signal : System 1's raw output dict (may be None).
+            verdict_signal    : Russell's retrieval signal string.  When
+                                "LOW_CONFIDENCE", all rules are bypassed and
+                                UNVERIFIED is returned immediately.
 
         Returns:
             A ``ConflictResolution`` named tuple.
         """
+        # ── LOW_CONFIDENCE pre-check ─────────────────────────────────────
+        # Russell's signal explicitly flags that his retrieval is unreliable.
+        # We must not override this with bucket_a matches — a match found
+        # under low-confidence retrieval may be a false positive.
+        if verdict_signal == "LOW_CONFIDENCE":
+            return ConflictResolution(
+                verdict="UNVERIFIED",
+                confidence=0.50,
+                rule="no_evidence_clf_weak",
+                reason=(
+                    "Russell's retrieval signal is LOW_CONFIDENCE, indicating "
+                    "the retrieved evidence is unreliable. Even though a "
+                    "fact-check match exists, it cannot be trusted under low-"
+                    "confidence retrieval. Verdict deferred to UNVERIFIED. "
+                    "⚠️ Warning: Russell retrieved sparse evidence. "
+                    "Treat this verdict with caution."
+                ),
+            )
+
         clf_label      = None
         clf_confidence = 0.0
         clf_verdict    = None
@@ -309,11 +322,11 @@ class StanceAggregator:
 
         Returns:
             A 4-tuple of:
-                verdict           (str)   — "TRUE", "FALSE", or "UNVERIFIED"
-                confidence        (float) — calibrated score in (0, 0.95]
-                reasoning_summary (str)   — compact debug string
-                evidence_sparse   (bool)  — True when LOW_CONFIDENCE signal
-                                            triggered sparse-evidence handling
+                verdict                (str)   — "TRUE", "FALSE", or "UNVERIFIED"
+                confidence             (float) — calibrated score in (0, 0.95]
+                reasoning_summary      (str)   — compact debug string
+                evidence_sparse        (bool)  — True when LOW_CONFIDENCE signal
+                                                 triggered sparse-evidence handling
         """
         # ----------------------------------------------------------------
         # 1. Accumulate stance scores
@@ -387,27 +400,33 @@ class StanceAggregator:
         # 6. LOW_CONFIDENCE signal overrides
         #
         # When Russell signals LOW_CONFIDENCE, the retrieval layer itself
-        # is uncertain.  We apply two overrides regardless of what the NLI
-        # math produced:
+        # is uncertain.  Three overrides apply:
         #
-        #   a) Sparse evidence (< 3 evaluated propositions):
+        #   a) low_confidence_penalty flag: always True under LOW_CONFIDENCE.
+        #      The reason_builder reads this to prepend a warning.
+        #
+        #   b) Sparse evidence (< 3 evaluated propositions):
         #      Force verdict to UNVERIFIED — not enough data to decide.
         #
-        #   b) Always cap confidence at 0.65 — even strong, unanimous NLI
+        #   c) Confidence multiplied by 0.75 — even strong, unanimous NLI
         #      evidence cannot overcome Russell's retrieval uncertainty.
+        #      Applied AFTER the sparse check so UNVERIFIED cases also get
+        #      the penalty (capped at 0.65 as before for sparse cases).
         # ----------------------------------------------------------------
-        evidence_sparse = False
+        evidence_sparse         = False
+        low_confidence_penalty  = False
 
         if verdict_signal == "LOW_CONFIDENCE":
-            evidence_sparse = True
-            total_evaluated = len(stances)
+            evidence_sparse        = True
+            low_confidence_penalty = True
+            total_evaluated        = len(stances)
 
-            # Override (a): too few propositions → force UNVERIFIED
+            # Override (b): too few propositions → force UNVERIFIED
             if total_evaluated < 3:
                 verdict = "UNVERIFIED"
 
-            # Override (b): cap confidence regardless of math result
-            confidence = min(confidence, 0.65)
+            # Override (c): multiply by 0.75, then cap at 0.65
+            confidence = min(confidence * 0.75, 0.65)
 
         # ----------------------------------------------------------------
         # 7. Reasoning summary
@@ -423,7 +442,8 @@ class StanceAggregator:
             f"neutral={n_neutral}, "
             f"raw_ratio={raw_ratio:.3f}, "
             f"adjusted={adjusted_ratio:.3f}, "
-            f"evidence_sparse={evidence_sparse}"
+            f"evidence_sparse={evidence_sparse}, "
+            f"low_confidence_penalty={low_confidence_penalty}"
         )
 
         return verdict, round(confidence, 4), reasoning_summary, evidence_sparse
