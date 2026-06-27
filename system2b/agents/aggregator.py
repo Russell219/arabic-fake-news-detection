@@ -5,7 +5,7 @@ Converts a list of weighted NLI stances (from bucket_b) plus the
 verdict_signal prior from Russell into a final verdict, a calibrated
 confidence score, and a human-readable reasoning summary.
 
-Flow:
+Flow (NLI path — bucket_b present):
     StanceDetail list  +  verdict_signal
            │
            ▼
@@ -19,11 +19,93 @@ Flow:
            │
            ▼
     verdict  +  confidence  +  reasoning_summary  +  evidence_sparse
+
+Conflict resolution path (bucket_b empty — added v3):
+    bucket_a entries  +  classifier_signal
+           │
+           ▼
+    resolve_bucket_a_conflict()
+           │
+           ▼
+    ConflictResolution(verdict, confidence, rule, reason)
 """
 
-from typing import List, Tuple
+from typing import List, NamedTuple, Optional, Tuple
 
-from agents.schemas import StanceDetail
+from agents.schemas import BucketAEntry, StanceDetail
+
+# ---------------------------------------------------------------------------
+# Signal priors
+# ---------------------------------------------------------------------------
+
+SIGNAL_PRIORS: dict[str, float] = {
+    # Path 1 signals (won't normally reach Path 2, included for completeness)
+    "HIGH_FAKE_MATCH":    -1.0,
+    "HIGH_TRUE_MATCH":     1.0,
+    # Ambiguous / partial signals
+    "HIGH_PARTIAL_MATCH":  0.0,
+    "POSSIBLE_FAKE":      -0.3,
+    "POSSIBLE_TRUE":       0.3,
+    "POSSIBLE_MATCH":      0.0,
+    "EVIDENCE_FOUND":      0.1,
+    "LOW_CONFIDENCE":      0.0,
+}
+
+# ---------------------------------------------------------------------------
+# Bucket A similarity thresholds
+# ---------------------------------------------------------------------------
+
+# >= SOLID_THRESHOLD  → fact-check evidence is trustworthy; overrides classifier
+_BUCKET_A_SOLID_THRESHOLD    = 0.75
+# >= MODERATE_LOW AND < SOLID → moderate; classifier can challenge if very confident
+_BUCKET_A_MODERATE_THRESHOLD = 0.60
+
+# Classifier must be at least this confident to challenge moderate bucket_a
+_CLASSIFIER_CHALLENGE_THRESHOLD = 0.90
+
+
+# ---------------------------------------------------------------------------
+# Label helper (also used by verdict_engine.py — defined here to avoid circular import)
+# ---------------------------------------------------------------------------
+
+def _label_to_verdict(label: str) -> str:
+    """
+    Map a BucketAEntry label to a FinalOutput verdict string.
+
+        TRUE         → TRUE
+        FALSE        → FALSE
+        PARTLY_FALSE → UNVERIFIED
+        SARCASM      → UNVERIFIED
+        UNVERIFIABLE → UNVERIFIED
+        UNKNOWN      → UNVERIFIED
+    """
+    if label == "TRUE":
+        return "TRUE"
+    if label == "FALSE":
+        return "FALSE"
+    return "UNVERIFIED"
+
+
+# ---------------------------------------------------------------------------
+# Result type for conflict resolution
+# ---------------------------------------------------------------------------
+
+class ConflictResolution(NamedTuple):
+    """
+    Output of ``StanceAggregator.resolve_bucket_a_conflict()``.
+
+    Attributes:
+        verdict    : "TRUE", "FALSE", or "UNVERIFIED"
+        confidence : Calibrated confidence score in (0, 0.95]
+        rule       : Which rule fired — "solid_bucket_a", "moderate_conflict",
+                     "moderate_agree", "no_evidence_clf_strong",
+                     "no_evidence_clf_weak"
+        reason     : Human-readable explanation string (passed to FinalOutput)
+    """
+    verdict:    str
+    confidence: float
+    rule:       str
+    reason:     str
 
 # ---------------------------------------------------------------------------
 # Signal priors
@@ -67,6 +149,145 @@ class StanceAggregator:
     * Confidence is deliberately capped at 0.95 — the system should never
       claim certainty on open-domain Arabic claims.
     """
+
+    # ------------------------------------------------------------------
+    # Conflict resolution (v3) — bucket_b is empty
+    # ------------------------------------------------------------------
+
+    def resolve_bucket_a_conflict(
+        self,
+        bucket_a: List[BucketAEntry],
+        classifier_signal: Optional[dict],
+    ) -> ConflictResolution:
+        """
+        Resolve the verdict when bucket_b is empty (no NLI evidence).
+
+        Implements the four-rule hierarchy:
+
+        Rule 1 — SOLID BUCKET A (similarity >= 0.75):
+            Fact-checked DB evidence is trustworthy.  Trust bucket_a.label
+            regardless of what the classifier says.
+            confidence = min(0.90, similarity)
+
+        Rule 2a — MODERATE BUCKET A (0.60–0.75) + CONFIDENT CLASSIFIER DISAGREES:
+            Neither source is fully trustworthy alone.
+            Output UNVERIFIED, confidence = 0.55.
+
+        Rule 2b — MODERATE BUCKET A + CLASSIFIER AGREES or IS WEAK:
+            Fact-check still outranks a weak/agreeing classifier.
+            confidence = similarity * 0.85
+
+        Rule 3a — NO BUCKET A, CLASSIFIER CONFIDENT (>= 0.90):
+            No retrieved evidence at all.  Fall back to classifier, discounted.
+            confidence = classifier_confidence * 0.70
+
+        Rule 3b — NO BUCKET A, CLASSIFIER WEAK:
+            Nothing to work with.
+            Output UNVERIFIED, confidence = 0.50
+
+        Args:
+            bucket_a          : List of BucketAEntry dicts (may be empty).
+            classifier_signal : System 1's raw output dict (may be None).
+
+        Returns:
+            A ``ConflictResolution`` named tuple.
+        """
+        clf_label      = None
+        clf_confidence = 0.0
+        clf_verdict    = None
+
+        if classifier_signal:
+            clf_label      = classifier_signal.get("label", "")
+            clf_confidence = float(classifier_signal.get("confidence", 0.0))
+            clf_verdict    = "FALSE" if clf_label == "fake" else "TRUE"
+
+        # ── Rules 1 & 2: bucket_a is present ────────────────────────────
+        if bucket_a:
+            best   = max(bucket_a, key=lambda x: x["similarity"])
+            sim    = best["similarity"]
+            a_verdict = _label_to_verdict(best["label"])
+            source = best.get("source", "fact-check DB")
+
+            # Rule 1 — solid bucket_a
+            if sim >= _BUCKET_A_SOLID_THRESHOLD:
+                confidence = round(min(0.90, sim), 4)
+                reason = (
+                    f"Russell found solid fact-checked evidence in known-fakes "
+                    f"database (similarity {sim:.3f}, source: {source}). "
+                    f"System 1 classifier disagreement is overridden because "
+                    f"fact-checked evidence outranks classifier prediction."
+                )
+                return ConflictResolution(
+                    verdict=a_verdict,
+                    confidence=confidence,
+                    rule="solid_bucket_a",
+                    reason=reason,
+                )
+
+            # Rule 2 — moderate bucket_a (0.60 <= sim < 0.75)
+            if sim >= _BUCKET_A_MODERATE_THRESHOLD:
+                classifier_disagrees = (
+                    clf_verdict is not None
+                    and clf_verdict != a_verdict
+                    and clf_confidence >= _CLASSIFIER_CHALLENGE_THRESHOLD
+                )
+
+                if classifier_disagrees:
+                    # Rule 2a — conflict
+                    reason = (
+                        f"Moderate fact-checked evidence (similarity {sim:.3f}, "
+                        f"source: {source}) conflicts with confident classifier "
+                        f"prediction ({clf_label}, {clf_confidence:.3f}). "
+                        f"Neither source is fully trustworthy alone."
+                    )
+                    return ConflictResolution(
+                        verdict="UNVERIFIED",
+                        confidence=0.55,
+                        rule="moderate_conflict",
+                        reason=reason,
+                    )
+                else:
+                    # Rule 2b — agree or weak classifier
+                    confidence = round(sim * 0.85, 4)
+                    reason = (
+                        f"Moderate fact-checked evidence (similarity {sim:.3f}, "
+                        f"source: {source}) is the primary signal. "
+                        f"Classifier is weak or agrees; fact-check outranks it."
+                    )
+                    return ConflictResolution(
+                        verdict=a_verdict,
+                        confidence=confidence,
+                        rule="moderate_agree",
+                        reason=reason,
+                    )
+
+            # bucket_a exists but similarity < 0.60 — too weak to trust alone;
+            # fall through to Rule 3 logic using classifier as primary.
+
+        # ── Rule 3: no usable bucket_a ───────────────────────────────────
+        if clf_confidence >= _CLASSIFIER_CHALLENGE_THRESHOLD and clf_verdict:
+            confidence = round(clf_confidence * 0.70, 4)
+            reason = (
+                "No retrieved evidence found in fact-check DB or trusted sources. "
+                "Verdict relies solely on classifier prediction with reduced confidence."
+            )
+            return ConflictResolution(
+                verdict=clf_verdict,
+                confidence=confidence,
+                rule="no_evidence_clf_strong",
+                reason=reason,
+            )
+
+        # Rule 3b — nothing reliable
+        return ConflictResolution(
+            verdict="UNVERIFIED",
+            confidence=0.50,
+            rule="no_evidence_clf_weak",
+            reason=(
+                "No evidence retrieved and classifier confidence is low. "
+                "Insufficient basis for verdict."
+            ),
+        )
 
     # ------------------------------------------------------------------
     # Public API
