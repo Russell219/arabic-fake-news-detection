@@ -5,7 +5,7 @@ Converts a list of weighted NLI stances (from bucket_b) plus the
 verdict_signal prior from Russell into a final verdict, a calibrated
 confidence score, and a human-readable reasoning summary.
 
-Flow:
+Flow (NLI path — bucket_b present):
     StanceDetail list  +  verdict_signal
            │
            ▼
@@ -19,11 +19,20 @@ Flow:
            │
            ▼
     verdict  +  confidence  +  reasoning_summary  +  evidence_sparse
+
+Conflict resolution path (bucket_b empty — added v3):
+    bucket_a entries  +  classifier_signal
+           │
+           ▼
+    resolve_bucket_a_conflict()
+           │
+           ▼
+    ConflictResolution(verdict, confidence, rule, reason)
 """
 
-from typing import List, Tuple
+from typing import List, NamedTuple, Optional, Tuple
 
-from agents.schemas import StanceDetail
+from agents.schemas import BucketAEntry, StanceDetail
 
 # ---------------------------------------------------------------------------
 # Signal priors
@@ -39,8 +48,64 @@ SIGNAL_PRIORS: dict[str, float] = {
     "POSSIBLE_TRUE":       0.3,
     "POSSIBLE_MATCH":      0.0,
     "EVIDENCE_FOUND":      0.1,
-    "LOW_CONFIDENCE":      0.0,
+    "LOW_CONFIDENCE":      -0.1,   # weak tilt toward uncertainty
 }
+
+# ---------------------------------------------------------------------------
+# Bucket A similarity thresholds
+# ---------------------------------------------------------------------------
+
+# >= SOLID_THRESHOLD  → fact-check evidence is trustworthy; overrides classifier
+_BUCKET_A_SOLID_THRESHOLD    = 0.75
+# >= MODERATE_LOW AND < SOLID → moderate; classifier can challenge if very confident
+_BUCKET_A_MODERATE_THRESHOLD = 0.60
+
+# Classifier must be at least this confident to challenge moderate bucket_a
+_CLASSIFIER_CHALLENGE_THRESHOLD = 0.90
+
+
+# ---------------------------------------------------------------------------
+# Label helper (also used by verdict_engine.py — defined here to avoid circular import)
+# ---------------------------------------------------------------------------
+
+def _label_to_verdict(label: str) -> str:
+    """
+    Map a BucketAEntry label to a FinalOutput verdict string.
+
+        TRUE         → TRUE
+        FALSE        → FALSE
+        PARTLY_FALSE → UNVERIFIED
+        SARCASM      → UNVERIFIED
+        UNVERIFIABLE → UNVERIFIED
+        UNKNOWN      → UNVERIFIED
+    """
+    if label == "TRUE":
+        return "TRUE"
+    if label == "FALSE":
+        return "FALSE"
+    return "UNVERIFIED"
+
+
+# ---------------------------------------------------------------------------
+# Result type for conflict resolution
+# ---------------------------------------------------------------------------
+
+class ConflictResolution(NamedTuple):
+    """
+    Output of ``StanceAggregator.resolve_bucket_a_conflict()``.
+
+    Attributes:
+        verdict    : "TRUE", "FALSE", or "UNVERIFIED"
+        confidence : Calibrated confidence score in (0, 0.95]
+        rule       : Which rule fired — "solid_bucket_a", "moderate_conflict",
+                     "moderate_agree", "no_evidence_clf_strong",
+                     "no_evidence_clf_weak"
+        reason     : Human-readable explanation string (passed to FinalOutput)
+    """
+    verdict:    str
+    confidence: float
+    rule:       str
+    reason:     str
 
 
 # ---------------------------------------------------------------------------
@@ -69,6 +134,175 @@ class StanceAggregator:
     """
 
     # ------------------------------------------------------------------
+    # Conflict resolution (v3) — bucket_b is empty
+    # ------------------------------------------------------------------
+
+    def resolve_bucket_a_conflict(
+        self,
+        bucket_a: List[BucketAEntry],
+        classifier_signal: Optional[dict],
+        verdict_signal: str = "",
+    ) -> ConflictResolution:
+        """
+        Resolve the verdict when bucket_b is empty (no NLI evidence).
+
+        Implements the four-rule hierarchy, with a LOW_CONFIDENCE pre-check:
+
+        LOW_CONFIDENCE pre-check (NEW):
+            When Russell's own signal is LOW_CONFIDENCE, his retrieval is
+            unreliable regardless of what bucket_a shows.  Even solid bucket_a
+            matches are demoted — we cannot trust that the match is genuine if
+            Russell himself flagged low confidence.  Return UNVERIFIED at 0.50
+            with a warning, bypassing all rules.
+
+        Rule 1 — SOLID BUCKET A (similarity >= 0.75):
+            Fact-checked DB evidence is trustworthy.  Trust bucket_a.label
+            regardless of what the classifier says.
+            confidence = min(0.90, similarity)
+
+        Rule 2a — MODERATE BUCKET A (0.60–0.75) + CONFIDENT CLASSIFIER DISAGREES:
+            Neither source is fully trustworthy alone.
+            Output UNVERIFIED, confidence = 0.55.
+
+        Rule 2b — MODERATE BUCKET A + CLASSIFIER AGREES or IS WEAK:
+            Fact-check still outranks a weak/agreeing classifier.
+            confidence = similarity * 0.85
+
+        Rule 3a — NO BUCKET A, CLASSIFIER CONFIDENT (>= 0.90):
+            No retrieved evidence at all.  Fall back to classifier, discounted.
+            confidence = classifier_confidence * 0.70
+
+        Rule 3b — NO BUCKET A, CLASSIFIER WEAK:
+            Nothing to work with.
+            Output UNVERIFIED, confidence = 0.50
+
+        Args:
+            bucket_a          : List of BucketAEntry dicts (may be empty).
+            classifier_signal : System 1's raw output dict (may be None).
+            verdict_signal    : Russell's retrieval signal string.  When
+                                "LOW_CONFIDENCE", all rules are bypassed and
+                                UNVERIFIED is returned immediately.
+
+        Returns:
+            A ``ConflictResolution`` named tuple.
+        """
+        # ── LOW_CONFIDENCE pre-check ─────────────────────────────────────
+        # Russell's signal explicitly flags that his retrieval is unreliable.
+        # We must not override this with bucket_a matches — a match found
+        # under low-confidence retrieval may be a false positive.
+        if verdict_signal == "LOW_CONFIDENCE":
+            return ConflictResolution(
+                verdict="UNVERIFIED",
+                confidence=0.50,
+                rule="no_evidence_clf_weak",
+                reason=(
+                    "Russell's retrieval signal is LOW_CONFIDENCE, indicating "
+                    "the retrieved evidence is unreliable. Even though a "
+                    "fact-check match exists, it cannot be trusted under low-"
+                    "confidence retrieval. Verdict deferred to UNVERIFIED. "
+                    "⚠️ Warning: Russell retrieved sparse evidence. "
+                    "Treat this verdict with caution."
+                ),
+            )
+
+        clf_label      = None
+        clf_confidence = 0.0
+        clf_verdict    = None
+
+        if classifier_signal:
+            clf_label      = classifier_signal.get("label", "")
+            clf_confidence = float(classifier_signal.get("confidence", 0.0))
+            clf_verdict    = "FALSE" if clf_label == "fake" else "TRUE"
+
+        # ── Rules 1 & 2: bucket_a is present ────────────────────────────
+        if bucket_a:
+            best   = max(bucket_a, key=lambda x: x["similarity"])
+            sim    = best["similarity"]
+            a_verdict = _label_to_verdict(best["label"])
+            source = best.get("source", "fact-check DB")
+
+            # Rule 1 — solid bucket_a
+            if sim >= _BUCKET_A_SOLID_THRESHOLD:
+                confidence = round(min(0.90, sim), 4)
+                reason = (
+                    f"Russell found solid fact-checked evidence in known-fakes "
+                    f"database (similarity {sim:.3f}, source: {source}). "
+                    f"System 1 classifier disagreement is overridden because "
+                    f"fact-checked evidence outranks classifier prediction."
+                )
+                return ConflictResolution(
+                    verdict=a_verdict,
+                    confidence=confidence,
+                    rule="solid_bucket_a",
+                    reason=reason,
+                )
+
+            # Rule 2 — moderate bucket_a (0.60 <= sim < 0.75)
+            if sim >= _BUCKET_A_MODERATE_THRESHOLD:
+                classifier_disagrees = (
+                    clf_verdict is not None
+                    and clf_verdict != a_verdict
+                    and clf_confidence >= _CLASSIFIER_CHALLENGE_THRESHOLD
+                )
+
+                if classifier_disagrees:
+                    # Rule 2a — conflict
+                    reason = (
+                        f"Moderate fact-checked evidence (similarity {sim:.3f}, "
+                        f"source: {source}) conflicts with confident classifier "
+                        f"prediction ({clf_label}, {clf_confidence:.3f}). "
+                        f"Neither source is fully trustworthy alone."
+                    )
+                    return ConflictResolution(
+                        verdict="UNVERIFIED",
+                        confidence=0.55,
+                        rule="moderate_conflict",
+                        reason=reason,
+                    )
+                else:
+                    # Rule 2b — agree or weak classifier
+                    confidence = round(sim * 0.85, 4)
+                    reason = (
+                        f"Moderate fact-checked evidence (similarity {sim:.3f}, "
+                        f"source: {source}) is the primary signal. "
+                        f"Classifier is weak or agrees; fact-check outranks it."
+                    )
+                    return ConflictResolution(
+                        verdict=a_verdict,
+                        confidence=confidence,
+                        rule="moderate_agree",
+                        reason=reason,
+                    )
+
+            # bucket_a exists but similarity < 0.60 — too weak to trust alone;
+            # fall through to Rule 3 logic using classifier as primary.
+
+        # ── Rule 3: no usable bucket_a ───────────────────────────────────
+        if clf_confidence >= _CLASSIFIER_CHALLENGE_THRESHOLD and clf_verdict:
+            confidence = round(clf_confidence * 0.70, 4)
+            reason = (
+                "No retrieved evidence found in fact-check DB or trusted sources. "
+                "Verdict relies solely on classifier prediction with reduced confidence."
+            )
+            return ConflictResolution(
+                verdict=clf_verdict,
+                confidence=confidence,
+                rule="no_evidence_clf_strong",
+                reason=reason,
+            )
+
+        # Rule 3b — nothing reliable
+        return ConflictResolution(
+            verdict="UNVERIFIED",
+            confidence=0.50,
+            rule="no_evidence_clf_weak",
+            reason=(
+                "No evidence retrieved and classifier confidence is low. "
+                "Insufficient basis for verdict."
+            ),
+        )
+
+    # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
 
@@ -88,11 +322,11 @@ class StanceAggregator:
 
         Returns:
             A 4-tuple of:
-                verdict           (str)   — "TRUE", "FALSE", or "UNVERIFIED"
-                confidence        (float) — calibrated score in (0, 0.95]
-                reasoning_summary (str)   — compact debug string
-                evidence_sparse   (bool)  — True when LOW_CONFIDENCE signal
-                                            triggered sparse-evidence handling
+                verdict                (str)   — "TRUE", "FALSE", or "UNVERIFIED"
+                confidence             (float) — calibrated score in (0, 0.95]
+                reasoning_summary      (str)   — compact debug string
+                evidence_sparse        (bool)  — True when LOW_CONFIDENCE signal
+                                                 triggered sparse-evidence handling
         """
         # ----------------------------------------------------------------
         # 1. Accumulate stance scores
@@ -166,27 +400,33 @@ class StanceAggregator:
         # 6. LOW_CONFIDENCE signal overrides
         #
         # When Russell signals LOW_CONFIDENCE, the retrieval layer itself
-        # is uncertain.  We apply two overrides regardless of what the NLI
-        # math produced:
+        # is uncertain.  Three overrides apply:
         #
-        #   a) Sparse evidence (< 3 evaluated propositions):
+        #   a) low_confidence_penalty flag: always True under LOW_CONFIDENCE.
+        #      The reason_builder reads this to prepend a warning.
+        #
+        #   b) Sparse evidence (< 3 evaluated propositions):
         #      Force verdict to UNVERIFIED — not enough data to decide.
         #
-        #   b) Always cap confidence at 0.65 — even strong, unanimous NLI
+        #   c) Confidence multiplied by 0.75 — even strong, unanimous NLI
         #      evidence cannot overcome Russell's retrieval uncertainty.
+        #      Applied AFTER the sparse check so UNVERIFIED cases also get
+        #      the penalty (capped at 0.65 as before for sparse cases).
         # ----------------------------------------------------------------
-        evidence_sparse = False
+        evidence_sparse         = False
+        low_confidence_penalty  = False
 
         if verdict_signal == "LOW_CONFIDENCE":
-            evidence_sparse = True
-            total_evaluated = len(stances)
+            evidence_sparse        = True
+            low_confidence_penalty = True
+            total_evaluated        = len(stances)
 
-            # Override (a): too few propositions → force UNVERIFIED
+            # Override (b): too few propositions → force UNVERIFIED
             if total_evaluated < 3:
                 verdict = "UNVERIFIED"
 
-            # Override (b): cap confidence regardless of math result
-            confidence = min(confidence, 0.65)
+            # Override (c): multiply by 0.75, then cap at 0.65
+            confidence = min(confidence * 0.75, 0.65)
 
         # ----------------------------------------------------------------
         # 7. Reasoning summary
@@ -202,7 +442,8 @@ class StanceAggregator:
             f"neutral={n_neutral}, "
             f"raw_ratio={raw_ratio:.3f}, "
             f"adjusted={adjusted_ratio:.3f}, "
-            f"evidence_sparse={evidence_sparse}"
+            f"evidence_sparse={evidence_sparse}, "
+            f"low_confidence_penalty={low_confidence_penalty}"
         )
 
         return verdict, round(confidence, 4), reasoning_summary, evidence_sparse
