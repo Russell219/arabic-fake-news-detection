@@ -49,6 +49,12 @@ class BucketAEntry(TypedDict, total=False):
         debunk      : Debunking text truncated to 200 chars.
                       IMPORTANT: saheeh_masr entries often have an empty string
                       here — this is not evidence of anything; check 'source'.
+        suspicious_match : When True, the retrieval pipeline flagged this match
+                      as potentially spurious (high lexical similarity but
+                      semantically mismatched). The Verdict Engine treats a
+                      suspicious match as UNRELIABLE — it does NOT trust the
+                      bucket_a label and falls back to NLI / classifier instead.
+                      Optional; absence is treated as False (trustworthy).
     """
 
     # required fields
@@ -60,6 +66,7 @@ class BucketAEntry(TypedDict, total=False):
     # enforced at runtime via Russell's schema, not Python's type system)
     dialect: str
     debunk: str
+    suspicious_match: bool
 
 
 class BucketBEntry(TypedDict, total=False):
