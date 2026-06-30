@@ -12,8 +12,9 @@ Routing (evaluated top to bottom, first match wins):
           Russell explicitly flags his retrieval as unreliable.
           Handled BEFORE all other paths, including Path 1.
           Sub-cases:
-            solid bucket_a (sim >= 0.75): trust DB but cap confidence at 0.70
-            moderate/absent bucket_a:     UNVERIFIED at 0.50, no NLI
+            solid bucket_a (sim >= 0.75):        trust DB, cap confidence 0.70
+            no solid bucket_a + clf >= 0.90:     trust classifier, cap 0.70
+            no solid bucket_a + clf <  0.90:     UNVERIFIED at 0.50
 
     HIGH_FAKE_MATCH / HIGH_TRUE_MATCH  +  non-empty bucket_a
         → Path 1  (fast path, no NLI, trust the fact-check DB directly)
@@ -83,6 +84,11 @@ _LOW_CONF_SOLID_THRESHOLD = 0.75
 
 # Maximum confidence allowed when bucket_a is solid but signal is LOW_CONFIDENCE.
 _LOW_CONF_SOLID_CAP = 0.70
+
+# Under LOW_CONFIDENCE with no solid bucket_a, the classifier must reach this
+# stricter bar (not the usual 0.80) to be trusted as the fallback signal,
+# because Russell's whole retrieval context is flagged unreliable.
+_LOW_CONF_CLASSIFIER_THRESHOLD = 0.90
 
 
 # ---------------------------------------------------------------------------
@@ -222,21 +228,20 @@ class VerdictEngine:
         matches in bucket_a may be false positives, bucket_b has nothing
         qualifying, and the classifier alone is never enough.
 
-        Three sub-cases:
+        Sub-cases:
 
         Sub-case A — solid bucket_a (sim >= 0.75):
             A very high similarity in a fact-check DB is hard to fake even
             under low-confidence retrieval.  We trust it, but cap confidence
             at 0.70 (not 0.90) and add a warning.
 
-        Sub-case B — moderate/absent bucket_a (sim < 0.75 or empty):
-            No reliable evidence exists.  Even if the classifier is confident,
-            classifier alone is not enough when Russell is uncertain.
-            Output: UNVERIFIED at confidence 0.50.
+        Sub-case B — no solid bucket_a + CONFIDENT classifier (>= 0.90):
+            No reliable fact-check evidence, but a very confident classifier
+            (>= 0.90) is trusted as the fallback signal, with confidence capped
+            at 0.70 because Russell's retrieval context is unreliable.
 
-        Sub-case C — same as B but classifier is confident:
-            Still UNVERIFIED — classifier alone cannot override a LOW_CONFIDENCE
-            signal from the retrieval engine.
+        Sub-case C — no solid bucket_a + WEAK classifier (< 0.90):
+            Nothing reliable to act on. Output UNVERIFIED at confidence 0.50.
         """
         # Defensive: ensure no suspicious matches slipped through.
         bucket_a = [e for e in bucket_a if not e.get("suspicious_match", False)]
@@ -272,31 +277,54 @@ class VerdictEngine:
                 classifier_fusion=absent_fusion,
             )
 
-        # Sub-case B/C: moderate or absent bucket_a — always UNVERIFIED
+        # Sub-cases B / C: no solid bucket_a
         clf_label = classifier_signal.get("label") if classifier_signal else None
         clf_conf  = float(classifier_signal.get("confidence", 0.0)) if classifier_signal else 0.0
 
-        if clf_label and clf_conf >= _CLASSIFIER_CONFIDENCE_THRESHOLD:
+        # Sub-case B — CONFIDENT classifier (>= 0.90): trust it, cap at 0.70.
+        # Under LOW_CONFIDENCE we demand the stricter 0.90 bar (not 0.80),
+        # because Russell's whole retrieval context is flagged unreliable.
+        if clf_label and clf_conf >= _LOW_CONF_CLASSIFIER_THRESHOLD:
+            clf_verdict = "FALSE" if clf_label == "fake" else "TRUE"
+            confidence  = round(min(_LOW_CONF_SOLID_CAP, clf_conf), 4)
+
             reason = (
-                "[LOW_CONFIDENCE + No Solid Evidence] "
-                "Russell's retrieval is unreliable and no strong fact-checked "
-                "evidence exists. "
-                f"System 1 classifier prediction ({clf_label}, {clf_conf:.3f}) "
-                "is noted but insufficient for a definitive verdict when the "
-                "retrieval engine itself reports low confidence. "
-                "⚠️ Low retrieval confidence reported by RAG engine."
-            )
-        else:
-            reason = (
-                "[LOW_CONFIDENCE + No Solid Evidence] "
-                "Russell reported low confidence in retrieval and no solid "
-                "fact-checked evidence exists. "
-                "System 1 classifier is not trusted alone. "
-                "Verdict is uncertain. "
-                "⚠️ Low retrieval confidence reported by RAG engine."
+                f"[LOW_CONFIDENCE + Confident Classifier] "
+                f"Russell reported low retrieval confidence and no solid "
+                f"fact-checked evidence exists, but System 1 classifier is "
+                f"highly confident ({clf_label}, {clf_conf:.3f}). "
+                f"The classifier verdict ({clf_verdict}) is used as the fallback "
+                f"signal, with confidence capped at {_LOW_CONF_SOLID_CAP} due to "
+                f"low retrieval reliability. "
+                f"⚠️ Low retrieval confidence reported by RAG engine."
             )
 
-        clf_fusion: dict = {
+            clf_fusion: dict = {
+                "used": True,
+                "label": clf_label,
+                "confidence": clf_conf,
+                "effect": "resolved_low_confidence",
+            }
+
+            return FinalOutput(
+                final_verdict=clf_verdict,
+                confidence=confidence,
+                stance_breakdown=[],
+                reason=reason,
+                classifier_fusion=clf_fusion,
+            )
+
+        # Sub-case C — WEAK or absent classifier: UNVERIFIED.
+        reason = (
+            "[LOW_CONFIDENCE + No Solid Evidence] "
+            "Russell reported low confidence in retrieval and no solid "
+            "fact-checked evidence exists. "
+            "System 1 classifier is weak or absent and is not trusted alone. "
+            "Verdict is uncertain. "
+            "⚠️ Low retrieval confidence reported by RAG engine."
+        )
+
+        clf_fusion = {
             "used": False,
             "label": clf_label,
             "confidence": clf_conf if clf_label else None,
