@@ -214,6 +214,13 @@ class StanceAggregator:
             clf_confidence = float(classifier_signal.get("confidence", 0.0))
             clf_verdict    = "FALSE" if clf_label == "fake" else "TRUE"
 
+        # ── Defensive suspicious_match filter ────────────────────────────
+        # verdict_engine.decide() already filters these, but resolve_bucket_a_
+        # conflict() may be called directly (tests, future callers). Drop any
+        # suspicious_match==True entries so they never drive a verdict.
+        if bucket_a:
+            bucket_a = [e for e in bucket_a if not e.get("suspicious_match", False)]
+
         # ── Rules 1 & 2: bucket_a is present ────────────────────────────
         if bucket_a:
             best   = max(bucket_a, key=lambda x: x["similarity"])
