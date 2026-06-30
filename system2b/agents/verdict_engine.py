@@ -95,6 +95,31 @@ def _normalise_rerank(rerank_score: float) -> float:
     return (clipped - _RERANK_MIN) / (_RERANK_MAX - _RERANK_MIN)
 
 
+def _filter_trustworthy_bucket_a(
+    bucket_a: List[BucketAEntry],
+) -> tuple[List[BucketAEntry], int]:
+    """
+    Drop bucket_a entries flagged with suspicious_match == True.
+
+    A suspicious match has high lexical similarity but is semantically
+    mismatched (e.g. matched on a shared named entity but a different claim).
+    The retrieval pipeline flags these so the Verdict Engine does not trust
+    them.  Filtered entries are treated as if they were never retrieved.
+
+    Args:
+        bucket_a: Raw bucket_a list from Russell's JSON.
+
+    Returns:
+        (trustworthy_entries, num_suspicious_dropped)
+    """
+    trustworthy = [
+        e for e in bucket_a
+        if not e.get("suspicious_match", False)
+    ]
+    dropped = len(bucket_a) - len(trustworthy)
+    return trustworthy, dropped
+
+
 # ---------------------------------------------------------------------------
 # VerdictEngine
 # ---------------------------------------------------------------------------
@@ -111,6 +136,7 @@ class VerdictEngine:
         self.nli            = ArabicNLIModel()
         self.aggregator     = StanceAggregator()
         self.reason_builder = ReasonBuilder()
+        self._last_suspicious_dropped = 0  # set per decide() call
 
     # ------------------------------------------------------------------
     # Public API
@@ -127,22 +153,32 @@ class VerdictEngine:
             4. Qualified bucket_b props → _path_two()
         """
         verdict_signal: str           = russell_json["verdict_signal"]
-        bucket_a: List[BucketAEntry]  = russell_json.get("bucket_a", [])
+        bucket_a_raw: List[BucketAEntry] = russell_json.get("bucket_a", [])
         bucket_b: List[BucketBEntry]  = russell_json.get("bucket_b", [])
         classifier_signal: Optional[ClassifierSignal] = russell_json.get(
             "classifier_signal"
         )
+
+        # ── BUG 1 FIX: drop suspicious bucket_a matches ──────────────────
+        # suspicious_match == True means the retrieval flagged the match as
+        # spurious (high lexical overlap, wrong claim).  We treat these as if
+        # bucket_a were empty for those entries — fall back to NLI / classifier.
+        bucket_a, n_suspicious = _filter_trustworthy_bucket_a(bucket_a_raw)
+        self._last_suspicious_dropped = n_suspicious  # for reason transparency
 
         # ── INTERCEPT 1: LOW_CONFIDENCE ──────────────────────────────────
         # Must come BEFORE Path 1.  Even a HIGH_FAKE_MATCH with LOW_CONFIDENCE
         # means Russell is unsure of his own retrieval — we must not blindly
         # trust it at full confidence.
         if verdict_signal == "LOW_CONFIDENCE":
-            return self._path_low_confidence(bucket_a, classifier_signal)
+            result = self._path_low_confidence(bucket_a, classifier_signal)
+            return self._inject_suspicious_note(result, n_suspicious)
 
         # ── INTERCEPT 2: Path 1 fast path ────────────────────────────────
+        # Only valid if a trustworthy bucket_a entry survived the filter.
         if verdict_signal in _FAST_PATH_SIGNALS and bucket_a:
-            return self._path_one(bucket_a, verdict_signal, classifier_signal)
+            result = self._path_one(bucket_a, verdict_signal, classifier_signal)
+            return self._inject_suspicious_note(result, n_suspicious)
 
         # ── INTERCEPT 3: no qualified bucket_b props ──────────────────────
         qualified_props = [
@@ -150,14 +186,25 @@ class VerdictEngine:
             if p.get("rerank_score", -999) > _RERANK_THRESHOLD
         ]
         if not qualified_props:
-            return self._path_bucket_a_only(
+            result = self._path_bucket_a_only(
                 bucket_a, verdict_signal, classifier_signal
             )
+            return self._inject_suspicious_note(result, n_suspicious)
 
         # ── INTERCEPT 4: full NLI path ────────────────────────────────────
-        return self._path_two(
+        result = self._path_two(
             russell_json, bucket_a, bucket_b, verdict_signal, classifier_signal
         )
+        return self._inject_suspicious_note(result, n_suspicious)
+
+    def _inject_suspicious_note(
+        self, result: FinalOutput, n_suspicious: int
+    ) -> FinalOutput:
+        """Prepend a suspicious-match note to result['reason'] if any were dropped."""
+        note = self.reason_builder.suspicious_match_note(n_suspicious)
+        if note:
+            result["reason"] = f"{note} {result['reason']}"
+        return result
 
     # ------------------------------------------------------------------
     # Path LOW_CONFIDENCE (v4) — Russell flags his retrieval as unreliable
@@ -191,6 +238,9 @@ class VerdictEngine:
             Still UNVERIFIED — classifier alone cannot override a LOW_CONFIDENCE
             signal from the retrieval engine.
         """
+        # Defensive: ensure no suspicious matches slipped through.
+        bucket_a = [e for e in bucket_a if not e.get("suspicious_match", False)]
+
         best_a = max(bucket_a, key=lambda x: x["similarity"]) if bucket_a else None
         sim    = best_a["similarity"] if best_a else 0.0
 
@@ -360,7 +410,16 @@ class VerdictEngine:
             base_reason=resolution.reason,
         )
 
-        # Build classifier_fusion metadata for transparency
+        verdict     = resolution.verdict
+        confidence  = resolution.confidence
+
+        # ── BUG 2 FIX: let a confident classifier RESOLVE an UNVERIFIED ──
+        # Conflict resolution can return UNVERIFIED (Rule 2a conflict, Rule 3b
+        # no-evidence). Previously the classifier never got a second chance
+        # here, so System 3 dumped these to UNVERIFIED. Now we run fusion.
+        # Exception: LOW_CONFIDENCE results are NOT resolved — Russell's signal
+        # explicitly says his retrieval (and the surfaced classifier context)
+        # is unreliable, so we respect the UNVERIFIED.
         fusion_meta = {
             "used": resolution.rule in ("no_evidence_clf_strong",),
             "label": clf_label,
@@ -374,9 +433,16 @@ class VerdictEngine:
             }.get(resolution.rule, "absent"),
         }
 
+        if verdict == "UNVERIFIED" and verdict_signal != "LOW_CONFIDENCE":
+            verdict, confidence, fusion_meta, fusion_note = self._fuse_classifier(
+                verdict, confidence, classifier_signal
+            )
+            if fusion_note:
+                reason += f" {fusion_note}"
+
         return FinalOutput(
-            final_verdict=resolution.verdict,
-            confidence=resolution.confidence,
+            final_verdict=verdict,
+            confidence=confidence,
             stance_breakdown=[],
             reason=reason,
             classifier_fusion=fusion_meta,
@@ -491,23 +557,27 @@ class VerdictEngine:
         """
         Fuse System 1's (Sarah's) classifier output with the RAG verdict.
 
-        Fusion rules
-        ------------
+        Fusion rules (v5 — Bug 2 fix)
+        -----------------------------
         absent / low-confidence (< 0.80):
             classifier is ignored — not reliable enough to influence.
 
-        REINFORCED — classifier agrees with RAG verdict:
-            confidence += 0.05 (capped at 0.95).
-            No verdict change.
+        REINFORCED — classifier agrees with a definitive RAG verdict:
+            confidence += 0.05 (capped at 0.95).  No verdict change.
 
-        OVERRIDDEN — classifier strongly disagrees (confidence ≥ 0.90)
-        AND RAG verdict is UNVERIFIED (ambiguous):
-            verdict flipped toward classifier's signal.
-            Confidence = average of RAG confidence and classifier confidence.
-            Note: classifier never overrides a definitive TRUE/FALSE verdict.
+        RESOLVED — RAG verdict is UNVERIFIED and classifier is confident
+        (>= 0.80):
+            The classifier RESOLVES the uncertainty.  This is the key Bug 2
+            fix: previously System 3 left UNVERIFIED in place unless the
+            classifier hit 0.90, so a correct 0.80–0.90 classifier was wasted.
+            Verdict becomes the classifier verdict.
+            Confidence scales with classifier confidence but is capped:
+              - clf >= 0.90 → cap 0.85  (strong resolution)
+              - clf >= 0.80 → cap 0.75  (moderate resolution)
 
-        IGNORED — classifier disagrees but RAG is already TRUE/FALSE:
-            RAG evidence takes precedence; classifier logged but not applied.
+        IGNORED — classifier disagrees but RAG is already definitive (TRUE/FALSE):
+            RAG evidence (fact-check / NLI) takes precedence; classifier logged
+            but not applied.
 
         Args:
             verdict           : Current RAG-derived verdict.
@@ -542,8 +612,8 @@ class VerdictEngine:
         # Map classifier label to verdict vocabulary
         clf_verdict = "FALSE" if clf_label == "fake" else "TRUE"
 
-        # --- REINFORCED ---
-        if clf_verdict == verdict:
+        # --- REINFORCED — classifier agrees with a definitive RAG verdict ---
+        if verdict in ("TRUE", "FALSE") and clf_verdict == verdict:
             new_confidence = min(0.95, confidence + 0.05)
             meta = {
                 "used": True,
@@ -557,18 +627,23 @@ class VerdictEngine:
             )
             return verdict, round(new_confidence, 4), meta, note
 
-        # --- OVERRIDDEN — only when RAG is ambiguous (UNVERIFIED) ---
-        if verdict == "UNVERIFIED" and clf_confidence >= 0.90:
-            new_confidence = round((confidence + clf_confidence) / 2, 4)
+        # --- RESOLVED — RAG was UNVERIFIED, confident classifier decides it ---
+        # This is the Bug 2 fix.  A confident classifier (>= 0.80) now RESOLVES
+        # an UNVERIFIED RAG verdict instead of being discarded.
+        if verdict == "UNVERIFIED":
+            # Confidence cap scales with how confident the classifier is.
+            cap = 0.85 if clf_confidence >= 0.90 else 0.75
+            new_confidence = round(min(cap, max(confidence, clf_confidence * 0.85)), 4)
             meta = {
                 "used": True,
                 "label": clf_label,
                 "confidence": clf_confidence,
-                "effect": "overridden",
+                "effect": "resolved",
             }
             note = (
                 f"[Fusion] RAG was UNVERIFIED; System 1 classifier "
-                f"({clf_label}, {clf_confidence:.2f}) overrides to {clf_verdict}."
+                f"({clf_label}, {clf_confidence:.2f}) resolves verdict to "
+                f"{clf_verdict} (confidence capped at {cap})."
             )
             return clf_verdict, new_confidence, meta, note
 
