@@ -227,6 +227,82 @@ class ReasonBuilder:
         return f"{rule_tag} {base_reason} {conclusion}"
 
     # ------------------------------------------------------------------
+    # Suspicious-match + classifier-role explainers (v5)
+    # ------------------------------------------------------------------
+
+    def suspicious_match_note(self, n_dropped: int) -> str:
+        """
+        Return a note explaining that suspicious bucket_a matches were dropped.
+
+        Args:
+            n_dropped: How many bucket_a entries were flagged suspicious_match.
+
+        Returns:
+            A note string, or "" when nothing was dropped.
+        """
+        if n_dropped <= 0:
+            return ""
+        plural = "matches" if n_dropped > 1 else "match"
+        return (
+            f"⚠️ {n_dropped} fact-check {plural} flagged as suspicious "
+            f"(high text overlap but likely a different claim) and excluded "
+            f"from the verdict."
+        )
+
+    def classifier_role(self, effect: str, clf_label: Optional[str],
+                        clf_confidence: float) -> str:
+        """
+        Return a human-readable sentence explaining how System 1's classifier
+        was used in the final verdict.
+
+        Args:
+            effect         : The classifier_fusion effect string, one of
+                             "reinforced", "resolved", "overridden", "ignored",
+                             "primary", "conflict", "ignored_low_confidence",
+                             "absent".
+            clf_label      : Classifier label ("real"/"fake"), or None.
+            clf_confidence : Classifier confidence score.
+
+        Returns:
+            A single explanatory sentence (may be "").
+        """
+        if effect in ("absent",) or not clf_label:
+            return ""
+
+        conf_str = f"{clf_confidence:.2f}"
+        explanations = {
+            "reinforced": (
+                f"System 1 classifier ({clf_label}, {conf_str}) agreed with the "
+                f"evidence and increased confidence."
+            ),
+            "resolved": (
+                f"System 1 classifier ({clf_label}, {conf_str}) resolved an "
+                f"otherwise-uncertain verdict."
+            ),
+            "overridden": (
+                f"System 1 classifier ({clf_label}, {conf_str}) overrode an "
+                f"uncertain RAG verdict."
+            ),
+            "primary": (
+                f"System 1 classifier ({clf_label}, {conf_str}) was the primary "
+                f"signal in the absence of retrieved evidence."
+            ),
+            "ignored": (
+                f"System 1 classifier ({clf_label}, {conf_str}) was noted but "
+                f"the fact-checked / NLI evidence took precedence."
+            ),
+            "conflict": (
+                f"System 1 classifier ({clf_label}, {conf_str}) conflicted with "
+                f"moderate fact-check evidence; verdict left uncertain."
+            ),
+            "ignored_low_confidence": (
+                f"System 1 classifier ({clf_label}, {conf_str}) was set aside "
+                f"because Russell reported low retrieval confidence."
+            ),
+        }
+        return explanations.get(effect, "")
+
+    # ------------------------------------------------------------------
     # Private part builders
     # ------------------------------------------------------------------
 
