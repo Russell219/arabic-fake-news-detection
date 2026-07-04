@@ -1,0 +1,557 @@
+/Library/Developer/CommandLineTools/usr/bin/python3: can't open file 'update_bucket_b.py': [Errno 1] Operation not permitted
+/Library/Developer/CommandLineTools/usr/bin/python3: can't open file 'update_bucket_b.py': [Errno 1] Operation not permitted
+2026-06-25 20:00 | INFO | Loading E5-large model...
+2026-06-25 20:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-25 20:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+2026-06-25 20:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-25 20:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-06-25 20:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-06-25 20:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-06-25 20:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large "HTTP/1.1 200 OK"
+2026-06-25 20:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-25 20:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+Loading weights:   0%|          | 0/391 [00:00<?, ?it/s]Loading weights:  90%|████████▉ | 351/391 [00:00<00:00, 3503.24it/s]Loading weights: 100%|██████████| 391/391 [00:00<00:00, 3521.19it/s]
+2026-06-25 20:00 | INFO | E5-large loaded
+2026-06-25 20:00 | INFO | ============================================================
+2026-06-25 20:00 | INFO | Bucket B incremental update — starting
+2026-06-25 20:00 | INFO | ============================================================
+2026-06-25 20:00 | INFO | Fetching BBC_Arabic...
+2026-06-25 20:00 | INFO |   BBC_Arabic: 0 new articles
+2026-06-25 20:00 | INFO | Fetching CNN_Arabic...
+2026-06-25 20:00 | INFO |   CNN_Arabic: 4 new articles
+2026-06-25 20:00 | INFO | Fetching RT_Arabic...
+2026-06-25 20:01 | INFO |   RT_Arabic: 23 new articles
+2026-06-25 20:01 | INFO | Fetching DW_Arabic...
+2026-06-25 20:01 | INFO |   DW_Arabic: 1 new articles
+2026-06-25 20:01 | INFO | Fetching Asharq_AlAwsat...
+2026-06-25 20:02 | INFO |   Asharq_AlAwsat: 43 new articles
+2026-06-25 20:02 | INFO | Fetching Euronews_Arabic...
+2026-06-25 20:02 | INFO |   Euronews_Arabic: 4 new articles
+2026-06-25 20:02 | INFO | Fetching Sputnik_Arabic...
+2026-06-25 20:03 | INFO |   Sputnik_Arabic: 5 new articles
+2026-06-25 20:03 | INFO | Fetched 80 new articles total
+2026-06-25 20:03 | INFO | Extracted 991 new propositions from 80 articles
+2026-06-25 20:03 | INFO | Embedding new propositions...
+2026-06-26 00:31 | INFO | Chroma Bucket B currently has 28812 docs
+2026-06-26 00:31 | INFO | Chroma updated: 28812 → 29803 docs
+2026-06-26 00:31 | INFO | Propositions CSV updated: 28803 → 29790 rows
+2026-06-26 00:31 | INFO | Articles CSV updated: 2015 → 2095 rows
+2026-06-26 00:31 | INFO | ✅ Update complete in 16268.4s — +80 articles, +991 propositions
+2026-06-26 16:00 | INFO | Loading E5-large model...
+2026-06-26 16:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-26 16:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+2026-06-26 16:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-26 16:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-06-26 16:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-06-26 16:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-06-26 16:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large "HTTP/1.1 200 OK"
+2026-06-26 16:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-26 16:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+Loading weights:   0%|          | 0/391 [00:00<?, ?it/s]Loading weights:  44%|████▎     | 171/391 [00:00<00:00, 1708.61it/s]Loading weights: 100%|██████████| 391/391 [00:00<00:00, 2122.07it/s]
+2026-06-26 16:00 | INFO | E5-large loaded
+2026-06-26 16:00 | INFO | ============================================================
+2026-06-26 16:00 | INFO | Bucket B incremental update — starting
+2026-06-26 16:00 | INFO | ============================================================
+2026-06-26 16:00 | INFO | Fetching BBC_Arabic...
+2026-06-26 16:00 | INFO |   BBC_Arabic: 6 new articles
+2026-06-26 16:00 | INFO | Fetching CNN_Arabic...
+2026-06-26 16:00 | INFO |   CNN_Arabic: 20 new articles
+2026-06-26 16:00 | INFO | Fetching RT_Arabic...
+2026-06-26 16:18 | INFO |   RT_Arabic: 97 new articles
+2026-06-26 16:18 | INFO | Fetching DW_Arabic...
+2026-06-26 16:18 | INFO |   DW_Arabic: 8 new articles
+2026-06-26 16:18 | INFO | Fetching Asharq_AlAwsat...
+2026-06-26 16:22 | INFO |   Asharq_AlAwsat: 136 new articles
+2026-06-26 16:22 | INFO | Fetching Euronews_Arabic...
+2026-06-26 16:39 | INFO |   Euronews_Arabic: 46 new articles
+2026-06-26 16:39 | INFO | Fetching Sputnik_Arabic...
+2026-06-26 16:40 | INFO |   Sputnik_Arabic: 50 new articles
+2026-06-26 16:40 | INFO | Fetched 363 new articles total
+2026-06-26 16:40 | INFO | Extracted 4268 new propositions from 363 articles
+2026-06-26 16:40 | INFO | Embedding new propositions...
+2026-06-26 17:46 | INFO | Chroma Bucket B currently has 31839 docs
+2026-06-26 17:47 | INFO | Chroma updated: 31839 → 36107 docs
+2026-06-26 17:47 | INFO | Propositions CSV updated: 31794 → 36006 rows
+2026-06-26 17:47 | INFO | Articles CSV updated: 2265 → 2628 rows
+2026-06-26 17:47 | INFO | ✅ Update complete in 6399.9s — +363 articles, +4268 propositions
+2026-06-27 00:00 | INFO | Loading E5-large model...
+2026-06-27 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-27 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+2026-06-27 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-27 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-06-27 00:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-06-27 00:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-06-27 00:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large "HTTP/1.1 200 OK"
+2026-06-27 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-27 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+Loading weights:   0%|          | 0/391 [00:00<?, ?it/s]Loading weights:  77%|███████▋  | 301/391 [00:00<00:00, 3008.02it/s]Loading weights: 100%|██████████| 391/391 [00:00<00:00, 3064.75it/s]
+2026-06-27 00:00 | INFO | E5-large loaded
+2026-06-27 00:00 | INFO | ============================================================
+2026-06-27 00:00 | INFO | Bucket B incremental update — starting
+2026-06-27 00:00 | INFO | ============================================================
+2026-06-27 00:00 | INFO | Fetching BBC_Arabic...
+2026-06-27 00:00 | INFO |   BBC_Arabic: 2 new articles
+2026-06-27 00:00 | INFO | Fetching CNN_Arabic...
+2026-06-27 00:00 | INFO |   CNN_Arabic: 3 new articles
+2026-06-27 00:00 | INFO | Fetching RT_Arabic...
+2026-06-27 00:01 | INFO |   RT_Arabic: 13 new articles
+2026-06-27 00:01 | INFO | Fetching DW_Arabic...
+2026-06-27 00:01 | INFO |   DW_Arabic: 1 new articles
+2026-06-27 00:01 | INFO | Fetching Asharq_AlAwsat...
+2026-06-27 00:01 | INFO |   Asharq_AlAwsat: 9 new articles
+2026-06-27 00:01 | INFO | Fetching Euronews_Arabic...
+2026-06-27 00:01 | INFO |   Euronews_Arabic: 0 new articles
+2026-06-27 00:01 | INFO | Fetching Sputnik_Arabic...
+2026-06-27 00:01 | INFO |   Sputnik_Arabic: 3 new articles
+2026-06-27 00:01 | INFO | Fetched 31 new articles total
+2026-06-27 00:01 | INFO | Extracted 424 new propositions from 31 articles
+2026-06-27 00:01 | INFO | Embedding new propositions...
+2026-06-27 00:06 | INFO | Chroma Bucket B currently has 39073 docs
+2026-06-27 00:07 | INFO | Chroma updated: 39073 → 39497 docs
+2026-06-27 00:07 | INFO | Propositions CSV updated: 38932 → 39294 rows
+2026-06-27 00:07 | INFO | Articles CSV updated: 2881 → 2912 rows
+2026-06-27 00:07 | INFO | ✅ Update complete in 401.3s — +31 articles, +424 propositions
+2026-06-27 20:00 | INFO | Loading E5-large model...
+2026-06-27 20:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-27 20:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+2026-06-27 20:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-27 20:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-06-27 20:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-06-27 20:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-06-27 20:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large "HTTP/1.1 200 OK"
+2026-06-27 20:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-27 20:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+Loading weights:   0%|          | 0/391 [00:00<?, ?it/s]Loading weights:  78%|███████▊  | 305/391 [00:00<00:00, 3048.45it/s]Loading weights: 100%|██████████| 391/391 [00:00<00:00, 3312.05it/s]
+2026-06-27 20:00 | INFO | E5-large loaded
+2026-06-27 20:00 | INFO | ============================================================
+2026-06-27 20:00 | INFO | Bucket B incremental update — starting
+2026-06-27 20:00 | INFO | ============================================================
+2026-06-27 20:00 | INFO | Fetching BBC_Arabic...
+2026-06-27 20:00 | INFO |   BBC_Arabic: 9 new articles
+2026-06-27 20:00 | INFO | Fetching CNN_Arabic...
+2026-06-27 20:00 | INFO |   CNN_Arabic: 20 new articles
+2026-06-27 20:00 | INFO | Fetching RT_Arabic...
+2026-06-27 20:04 | INFO |   RT_Arabic: 73 new articles
+2026-06-27 20:04 | INFO | Fetching DW_Arabic...
+2026-06-27 20:04 | INFO |   DW_Arabic: 12 new articles
+2026-06-27 20:04 | INFO | Fetching Asharq_AlAwsat...
+2026-06-27 20:09 | INFO |   Asharq_AlAwsat: 186 new articles
+2026-06-27 20:09 | INFO | Fetching Euronews_Arabic...
+2026-06-27 20:09 | INFO |   Euronews_Arabic: 32 new articles
+2026-06-27 20:09 | INFO | Fetching Sputnik_Arabic...
+2026-06-27 20:10 | INFO |   Sputnik_Arabic: 54 new articles
+2026-06-27 20:10 | INFO | Fetched 386 new articles total
+2026-06-27 20:10 | INFO | Extracted 4510 new propositions from 386 articles
+2026-06-27 20:10 | INFO | Embedding new propositions...
+2026-06-28 00:20 | INFO | Chroma Bucket B currently has 39497 docs
+2026-06-28 01:12 | INFO | Chroma updated: 39497 → 44007 docs
+2026-06-28 01:12 | INFO | Propositions CSV updated: 39294 → 43774 rows
+2026-06-28 01:12 | INFO | Articles CSV updated: 2912 → 3298 rows
+2026-06-28 01:12 | INFO | ✅ Update complete in 18714.7s — +386 articles, +4510 propositions
+2026-06-29 00:00 | INFO | Loading E5-large model...
+2026-06-29 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-29 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+2026-06-29 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-29 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-06-29 00:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-06-29 00:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-06-29 00:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large "HTTP/1.1 200 OK"
+2026-06-29 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-29 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+Loading weights:   0%|          | 0/391 [00:00<?, ?it/s]Loading weights:  84%|████████▍ | 330/391 [00:00<00:00, 3263.00it/s]Loading weights: 100%|██████████| 391/391 [00:00<00:00, 3349.06it/s]
+2026-06-29 00:00 | INFO | E5-large loaded
+2026-06-29 00:00 | INFO | ============================================================
+2026-06-29 00:00 | INFO | Bucket B incremental update — starting
+2026-06-29 00:00 | INFO | ============================================================
+2026-06-29 00:00 | INFO | Fetching BBC_Arabic...
+2026-06-29 00:00 | INFO |   BBC_Arabic: 12 new articles
+2026-06-29 00:00 | INFO | Fetching CNN_Arabic...
+2026-06-29 00:00 | INFO |   CNN_Arabic: 20 new articles
+2026-06-29 00:00 | INFO | Fetching RT_Arabic...
+2026-06-29 00:04 | INFO |   RT_Arabic: 93 new articles
+2026-06-29 00:04 | INFO | Fetching DW_Arabic...
+2026-06-29 00:05 | INFO |   DW_Arabic: 13 new articles
+2026-06-29 00:05 | INFO | Fetching Asharq_AlAwsat...
+2026-06-29 00:09 | INFO |   Asharq_AlAwsat: 263 new articles
+2026-06-29 00:09 | INFO | Fetching Euronews_Arabic...
+2026-06-29 00:10 | INFO |   Euronews_Arabic: 35 new articles
+2026-06-29 00:10 | INFO | Fetching Sputnik_Arabic...
+2026-06-29 00:11 | INFO |   Sputnik_Arabic: 71 new articles
+2026-06-29 00:11 | INFO | Fetched 507 new articles total
+2026-06-29 00:11 | INFO | Extracted 6265 new propositions from 507 articles
+2026-06-29 00:11 | INFO | Embedding new propositions...
+2026-06-29 01:49 | INFO | Chroma Bucket B currently has 44007 docs
+2026-06-29 01:50 | INFO | Chroma updated: 44007 → 50272 docs
+2026-06-29 01:50 | INFO | Propositions CSV updated: 43774 → 49983 rows
+2026-06-29 01:50 | INFO | Articles CSV updated: 3298 → 3805 rows
+2026-06-29 01:50 | INFO | ✅ Update complete in 6620.5s — +507 articles, +6265 propositions
+2026-06-29 04:00 | INFO | Loading E5-large model...
+2026-06-29 04:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-29 04:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+2026-06-29 04:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-29 04:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-06-29 04:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-06-29 04:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-06-29 04:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large "HTTP/1.1 200 OK"
+2026-06-29 04:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-29 04:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+Loading weights:   0%|          | 0/391 [00:00<?, ?it/s]Loading weights:  28%|██▊       | 110/391 [00:00<00:00, 972.11it/s]Loading weights:  53%|█████▎    | 208/391 [00:00<00:00, 383.57it/s]Loading weights: 100%|██████████| 391/391 [00:00<00:00, 670.03it/s]
+2026-06-29 04:00 | INFO | E5-large loaded
+2026-06-29 04:00 | INFO | ============================================================
+2026-06-29 04:00 | INFO | Bucket B incremental update — starting
+2026-06-29 04:00 | INFO | ============================================================
+2026-06-29 04:00 | INFO | Fetching BBC_Arabic...
+2026-06-29 04:00 | INFO |   BBC_Arabic: 0 new articles
+2026-06-29 04:00 | INFO | Fetching CNN_Arabic...
+2026-06-29 04:00 | INFO |   CNN_Arabic: 7 new articles
+2026-06-29 04:00 | INFO | Fetching RT_Arabic...
+2026-06-29 04:02 | INFO |   RT_Arabic: 41 new articles
+2026-06-29 04:02 | INFO | Fetching DW_Arabic...
+2026-06-29 04:02 | INFO |   DW_Arabic: 2 new articles
+2026-06-29 04:02 | INFO | Fetching Asharq_AlAwsat...
+2026-06-29 04:03 | INFO |   Asharq_AlAwsat: 36 new articles
+2026-06-29 04:03 | INFO | Fetching Euronews_Arabic...
+2026-06-29 04:03 | INFO |   Euronews_Arabic: 2 new articles
+2026-06-29 04:03 | INFO | Fetching Sputnik_Arabic...
+2026-06-29 04:03 | INFO |   Sputnik_Arabic: 4 new articles
+2026-06-29 04:03 | INFO | Fetched 92 new articles total
+2026-06-29 04:03 | INFO | Extracted 817 new propositions from 92 articles
+2026-06-29 04:03 | INFO | Embedding new propositions...
+2026-06-29 04:15 | INFO | Chroma Bucket B currently has 43774 docs
+2026-06-29 04:15 | INFO | Chroma updated: 43774 → 44591 docs
+2026-06-29 04:15 | INFO | Propositions CSV updated: 49983 → 50713 rows
+2026-06-29 04:15 | INFO | Articles CSV updated: 3805 → 3896 rows
+2026-06-29 04:15 | INFO | ✅ Update complete in 912.1s — +92 articles, +817 propositions
+2026-06-30 00:00 | INFO | Loading E5-large model...
+2026-06-30 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-30 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+2026-06-30 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-30 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-06-30 00:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-06-30 00:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-06-30 00:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large "HTTP/1.1 200 OK"
+2026-06-30 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-30 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+Loading weights:   0%|          | 0/391 [00:00<?, ?it/s]Loading weights:  90%|█████████ | 352/391 [00:00<00:00, 3517.29it/s]Loading weights: 100%|██████████| 391/391 [00:00<00:00, 3798.26it/s]
+2026-06-30 00:00 | INFO | E5-large loaded
+2026-06-30 00:00 | INFO | ============================================================
+2026-06-30 00:00 | INFO | Bucket B incremental update — starting
+2026-06-30 00:00 | INFO | ============================================================
+2026-06-30 00:00 | INFO | Fetching BBC_Arabic...
+2026-06-30 00:00 | INFO |   BBC_Arabic: 10 new articles
+2026-06-30 00:00 | INFO | Fetching CNN_Arabic...
+2026-06-30 00:00 | INFO |   CNN_Arabic: 20 new articles
+2026-06-30 00:00 | INFO | Fetching RT_Arabic...
+2026-06-30 00:04 | INFO |   RT_Arabic: 100 new articles
+2026-06-30 00:04 | INFO | Fetching DW_Arabic...
+2026-06-30 00:05 | INFO |   DW_Arabic: 12 new articles
+2026-06-30 00:05 | INFO | Fetching Asharq_AlAwsat...
+2026-06-30 00:08 | INFO |   Asharq_AlAwsat: 215 new articles
+2026-06-30 00:08 | INFO | Fetching Euronews_Arabic...
+2026-06-30 00:09 | INFO |   Euronews_Arabic: 50 new articles
+2026-06-30 00:09 | INFO | Fetching Sputnik_Arabic...
+2026-06-30 00:10 | INFO |   Sputnik_Arabic: 60 new articles
+2026-06-30 00:10 | INFO | Fetched 467 new articles total
+2026-06-30 00:10 | INFO | Extracted 6122 new propositions from 467 articles
+2026-06-30 00:10 | INFO | Embedding new propositions...
+2026-06-30 01:31 | INFO | Chroma Bucket B currently has 44591 docs
+2026-06-30 01:31 | INFO | Chroma updated: 44591 → 50713 docs
+2026-06-30 01:31 | INFO | Propositions CSV updated: 50713 → 56795 rows
+2026-06-30 01:31 | INFO | Articles CSV updated: 3896 → 4362 rows
+2026-06-30 01:31 | INFO | ✅ Update complete in 5491.4s — +467 articles, +6122 propositions
+2026-06-30 04:00 | INFO | Loading E5-large model...
+2026-06-30 04:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-30 04:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+2026-06-30 04:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-30 04:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-06-30 04:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-06-30 04:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-06-30 04:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large "HTTP/1.1 200 OK"
+2026-06-30 04:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-30 04:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+Loading weights:   0%|          | 0/391 [00:00<?, ?it/s]Loading weights:  80%|████████  | 314/391 [00:00<00:00, 3087.30it/s]Loading weights: 100%|██████████| 391/391 [00:00<00:00, 3257.54it/s]
+2026-06-30 04:00 | INFO | E5-large loaded
+2026-06-30 04:00 | INFO | ============================================================
+2026-06-30 04:00 | INFO | Bucket B incremental update — starting
+2026-06-30 04:00 | INFO | ============================================================
+2026-06-30 04:00 | INFO | Fetching BBC_Arabic...
+2026-06-30 04:00 | INFO |   BBC_Arabic: 0 new articles
+2026-06-30 04:00 | INFO | Fetching CNN_Arabic...
+2026-06-30 04:00 | INFO |   CNN_Arabic: 6 new articles
+2026-06-30 04:00 | INFO | Fetching RT_Arabic...
+2026-06-30 04:02 | INFO |   RT_Arabic: 48 new articles
+2026-06-30 04:02 | INFO | Fetching DW_Arabic...
+2026-06-30 04:02 | INFO |   DW_Arabic: 2 new articles
+2026-06-30 04:02 | INFO | Fetching Asharq_AlAwsat...
+2026-06-30 04:02 | INFO |   Asharq_AlAwsat: 31 new articles
+2026-06-30 04:02 | INFO | Fetching Euronews_Arabic...
+2026-06-30 04:02 | INFO |   Euronews_Arabic: 2 new articles
+2026-06-30 04:02 | INFO | Fetching Sputnik_Arabic...
+2026-06-30 04:03 | INFO |   Sputnik_Arabic: 4 new articles
+2026-06-30 04:03 | INFO | Fetched 93 new articles total
+2026-06-30 04:03 | INFO | Extracted 818 new propositions from 93 articles
+2026-06-30 04:03 | INFO | Embedding new propositions...
+2026-06-30 04:13 | INFO | Chroma Bucket B currently has 50713 docs
+2026-06-30 04:13 | INFO | Chroma updated: 50713 → 51531 docs
+2026-06-30 04:13 | INFO | Propositions CSV updated: 56795 → 57517 rows
+2026-06-30 04:13 | INFO | Articles CSV updated: 4362 → 4455 rows
+2026-06-30 04:13 | INFO | ✅ Update complete in 797.5s — +93 articles, +818 propositions
+2026-06-30 20:00 | INFO | Loading E5-large model...
+2026-06-30 20:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-30 20:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+2026-06-30 20:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-30 20:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-06-30 20:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-06-30 20:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-06-30 20:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large "HTTP/1.1 200 OK"
+2026-06-30 20:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-06-30 20:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+Loading weights:   0%|          | 0/391 [00:00<?, ?it/s]Loading weights:  77%|███████▋  | 302/391 [00:00<00:00, 3000.30it/s]Loading weights: 100%|██████████| 391/391 [00:00<00:00, 3103.18it/s]
+2026-06-30 20:00 | INFO | E5-large loaded
+2026-06-30 20:00 | INFO | ============================================================
+2026-06-30 20:00 | INFO | Bucket B incremental update — starting
+2026-06-30 20:00 | INFO | ============================================================
+2026-06-30 20:00 | INFO | Fetching BBC_Arabic...
+2026-06-30 20:00 | INFO |   BBC_Arabic: 9 new articles
+2026-06-30 20:00 | INFO | Fetching CNN_Arabic...
+2026-06-30 20:00 | INFO |   CNN_Arabic: 20 new articles
+2026-06-30 20:00 | INFO | Fetching RT_Arabic...
+2026-06-30 20:04 | INFO |   RT_Arabic: 99 new articles
+2026-06-30 20:04 | INFO | Fetching DW_Arabic...
+2026-06-30 20:04 | INFO |   DW_Arabic: 10 new articles
+2026-06-30 20:04 | INFO | Fetching Asharq_AlAwsat...
+2026-06-30 20:08 | INFO |   Asharq_AlAwsat: 225 new articles
+2026-06-30 20:08 | INFO | Fetching Euronews_Arabic...
+2026-06-30 20:09 | INFO |   Euronews_Arabic: 50 new articles
+2026-06-30 20:09 | INFO | Fetching Sputnik_Arabic...
+2026-06-30 20:09 | INFO |   Sputnik_Arabic: 44 new articles
+2026-06-30 20:09 | INFO | Fetched 457 new articles total
+2026-06-30 20:09 | INFO | Extracted 5966 new propositions from 457 articles
+2026-06-30 20:09 | INFO | Embedding new propositions...
+2026-06-30 21:32 | INFO | Chroma Bucket B currently has 51531 docs
+2026-06-30 21:33 | INFO | Chroma updated: 51531 → 57497 docs
+2026-06-30 21:33 | INFO | Propositions CSV updated: 57517 → 63463 rows
+2026-06-30 21:33 | INFO | Articles CSV updated: 4455 → 4912 rows
+2026-06-30 21:33 | INFO | ✅ Update complete in 5572.6s — +457 articles, +5966 propositions
+2026-07-02 04:00 | INFO | Loading E5-large model...
+2026-07-02 04:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-02 04:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+2026-07-02 04:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-02 04:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-07-02 04:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-07-02 04:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-07-02 04:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large "HTTP/1.1 200 OK"
+2026-07-02 04:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-02 04:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+Loading weights:   0%|          | 0/391 [00:00<?, ?it/s]Loading weights:  76%|███████▌  | 296/391 [00:00<00:00, 2954.89it/s]Loading weights: 100%|██████████| 391/391 [00:00<00:00, 3067.00it/s]
+2026-07-02 04:00 | INFO | E5-large loaded
+2026-07-02 04:00 | INFO | ============================================================
+2026-07-02 04:00 | INFO | Bucket B incremental update — starting
+2026-07-02 04:00 | INFO | ============================================================
+2026-07-02 04:00 | INFO | Fetching BBC_Arabic...
+2026-07-02 04:00 | INFO |   BBC_Arabic: 11 new articles
+2026-07-02 04:00 | INFO | Fetching CNN_Arabic...
+2026-07-02 04:00 | INFO |   CNN_Arabic: 20 new articles
+2026-07-02 04:00 | INFO | Fetching RT_Arabic...
+2026-07-02 04:05 | INFO |   RT_Arabic: 99 new articles
+2026-07-02 04:05 | INFO | Fetching DW_Arabic...
+2026-07-02 04:05 | INFO |   DW_Arabic: 19 new articles
+2026-07-02 04:05 | INFO | Fetching Asharq_AlAwsat...
+2026-07-02 04:12 | INFO |   Asharq_AlAwsat: 300 new articles
+2026-07-02 04:12 | INFO | Fetching Euronews_Arabic...
+2026-07-02 04:12 | INFO |   Euronews_Arabic: 50 new articles
+2026-07-02 04:12 | INFO | Fetching Sputnik_Arabic...
+2026-07-02 04:14 | INFO |   Sputnik_Arabic: 92 new articles
+2026-07-02 04:14 | INFO | Fetched 591 new articles total
+2026-07-02 04:14 | INFO | Extracted 6854 new propositions from 591 articles
+2026-07-02 04:14 | INFO | Embedding new propositions...
+2026-07-02 05:53 | INFO | Chroma Bucket B currently has 57497 docs
+2026-07-02 05:54 | INFO | Chroma updated: 57497 → 64351 docs
+2026-07-02 05:54 | INFO | Propositions CSV updated: 63463 → 70300 rows
+2026-07-02 05:54 | INFO | Articles CSV updated: 4912 → 5503 rows
+2026-07-02 05:54 | INFO | ✅ Update complete in 6843.9s — +591 articles, +6854 propositions
+2026-07-02 16:02 | INFO | Loading E5-large model...
+2026-07-02 16:02 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-02 16:02 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+2026-07-02 16:02 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-02 16:02 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-07-02 16:02 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-07-02 16:02 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-07-02 16:03 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large "HTTP/1.1 200 OK"
+2026-07-02 16:03 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-02 16:03 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+Loading weights:   0%|          | 0/391 [00:00<?, ?it/s]Loading weights:  88%|████████▊ | 343/391 [00:00<00:00, 3429.49it/s]Loading weights: 100%|██████████| 391/391 [00:00<00:00, 3568.85it/s]
+2026-07-02 16:03 | INFO | E5-large loaded
+2026-07-02 16:03 | INFO | ============================================================
+2026-07-02 16:03 | INFO | Bucket B incremental update — starting
+2026-07-02 16:03 | INFO | ============================================================
+2026-07-02 16:03 | INFO | Fetching BBC_Arabic...
+2026-07-02 16:03 | INFO |   BBC_Arabic: 8 new articles
+2026-07-02 16:03 | INFO | Fetching CNN_Arabic...
+2026-07-02 16:03 | INFO |   CNN_Arabic: 20 new articles
+2026-07-02 16:03 | INFO | Fetching RT_Arabic...
+2026-07-02 16:06 | INFO |   RT_Arabic: 99 new articles
+2026-07-02 16:06 | INFO | Fetching DW_Arabic...
+2026-07-02 16:06 | INFO |   DW_Arabic: 11 new articles
+2026-07-02 16:06 | INFO | Fetching Asharq_AlAwsat...
+2026-07-02 16:08 | INFO |   Asharq_AlAwsat: 110 new articles
+2026-07-02 16:08 | INFO | Fetching Euronews_Arabic...
+2026-07-02 16:09 | INFO |   Euronews_Arabic: 42 new articles
+2026-07-02 16:09 | INFO | Fetching Sputnik_Arabic...
+2026-07-02 16:09 | INFO |   Sputnik_Arabic: 35 new articles
+2026-07-02 16:09 | INFO | Fetched 325 new articles total
+2026-07-02 16:09 | INFO | Extracted 4059 new propositions from 325 articles
+2026-07-02 16:09 | INFO | Embedding new propositions...
+2026-07-02 17:01 | INFO | Chroma Bucket B currently has 64351 docs
+2026-07-02 17:02 | INFO | Chroma updated: 64351 → 68410 docs
+2026-07-02 17:02 | INFO | Propositions CSV updated: 70300 → 74330 rows
+2026-07-02 17:02 | INFO | Articles CSV updated: 5503 → 5828 rows
+2026-07-02 17:02 | INFO | ✅ Update complete in 3548.9s — +325 articles, +4059 propositions
+2026-07-02 20:00 | INFO | Loading E5-large model...
+2026-07-02 20:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-02 20:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+2026-07-02 20:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-02 20:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-07-02 20:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-07-02 20:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-07-02 20:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large "HTTP/1.1 200 OK"
+2026-07-02 20:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-02 20:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+Loading weights:   0%|          | 0/391 [00:00<?, ?it/s]Loading weights:  91%|█████████ | 354/391 [00:00<00:00, 3535.41it/s]Loading weights: 100%|██████████| 391/391 [00:00<00:00, 3625.98it/s]
+2026-07-02 20:00 | INFO | E5-large loaded
+2026-07-02 20:00 | INFO | ============================================================
+2026-07-02 20:00 | INFO | Bucket B incremental update — starting
+2026-07-02 20:00 | INFO | ============================================================
+2026-07-02 20:00 | INFO | Fetching BBC_Arabic...
+2026-07-02 20:00 | INFO |   BBC_Arabic: 4 new articles
+2026-07-02 20:00 | INFO | Fetching CNN_Arabic...
+2026-07-02 20:00 | INFO |   CNN_Arabic: 11 new articles
+2026-07-02 20:00 | INFO | Fetching RT_Arabic...
+2026-07-02 20:01 | INFO |   RT_Arabic: 38 new articles
+2026-07-02 20:01 | INFO | Fetching DW_Arabic...
+2026-07-02 20:02 | INFO |   DW_Arabic: 5 new articles
+2026-07-02 20:02 | INFO | Fetching Asharq_AlAwsat...
+2026-07-02 20:04 | INFO |   Asharq_AlAwsat: 79 new articles
+2026-07-02 20:04 | INFO | Fetching Euronews_Arabic...
+2026-07-02 20:04 | INFO |   Euronews_Arabic: 14 new articles
+2026-07-02 20:04 | INFO | Fetching Sputnik_Arabic...
+2026-07-02 20:04 | INFO |   Sputnik_Arabic: 20 new articles
+2026-07-02 20:04 | INFO | Fetched 171 new articles total
+2026-07-02 20:04 | INFO | Extracted 2152 new propositions from 171 articles
+2026-07-02 20:04 | INFO | Embedding new propositions...
+2026-07-02 21:57 | INFO | Chroma Bucket B currently has 68410 docs
+2026-07-02 21:57 | INFO | Chroma updated: 68410 → 70562 docs
+2026-07-02 21:57 | INFO | Propositions CSV updated: 74330 → 76346 rows
+2026-07-02 21:57 | INFO | Articles CSV updated: 5828 → 5998 rows
+2026-07-02 21:57 | INFO | ✅ Update complete in 7033.1s — +171 articles, +2152 propositions
+2026-07-03 00:00 | INFO | Loading E5-large model...
+2026-07-03 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-03 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+2026-07-03 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-03 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-07-03 00:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-07-03 00:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-07-03 00:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large "HTTP/1.1 200 OK"
+2026-07-03 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-03 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+Loading weights:   0%|          | 0/391 [00:00<?, ?it/s]Loading weights:  69%|██████▊   | 268/391 [00:00<00:00, 2676.82it/s]Loading weights: 100%|██████████| 391/391 [00:00<00:00, 2962.28it/s]
+2026-07-03 00:00 | INFO | E5-large loaded
+2026-07-03 00:00 | INFO | ============================================================
+2026-07-03 00:00 | INFO | Bucket B incremental update — starting
+2026-07-03 00:00 | INFO | ============================================================
+2026-07-03 00:00 | INFO | Fetching BBC_Arabic...
+2026-07-03 00:00 | INFO |   BBC_Arabic: 3 new articles
+2026-07-03 00:00 | INFO | Fetching CNN_Arabic...
+2026-07-03 00:00 | INFO |   CNN_Arabic: 7 new articles
+2026-07-03 00:00 | INFO | Fetching RT_Arabic...
+2026-07-03 00:02 | INFO |   RT_Arabic: 58 new articles
+2026-07-03 00:02 | INFO | Fetching DW_Arabic...
+2026-07-03 00:02 | INFO |   DW_Arabic: 5 new articles
+2026-07-03 00:02 | INFO | Fetching Asharq_AlAwsat...
+2026-07-03 00:03 | INFO |   Asharq_AlAwsat: 52 new articles
+2026-07-03 00:03 | INFO | Fetching Euronews_Arabic...
+2026-07-03 00:04 | INFO |   Euronews_Arabic: 9 new articles
+2026-07-03 00:04 | INFO | Fetching Sputnik_Arabic...
+2026-07-03 00:04 | INFO |   Sputnik_Arabic: 12 new articles
+2026-07-03 00:04 | INFO | Fetched 146 new articles total
+2026-07-03 00:04 | INFO | Extracted 1721 new propositions from 146 articles
+2026-07-03 00:04 | INFO | Embedding new propositions...
+2026-07-03 03:26 | INFO | Chroma Bucket B currently has 70562 docs
+2026-07-03 03:46 | INFO | Chroma updated: 70562 → 72283 docs
+2026-07-03 03:46 | INFO | Propositions CSV updated: 76346 → 77982 rows
+2026-07-03 03:46 | INFO | Articles CSV updated: 5998 → 6144 rows
+2026-07-03 03:46 | INFO | ✅ Update complete in 13540.7s — +146 articles, +1721 propositions
+2026-07-04 00:00 | INFO | Loading E5-large model...
+2026-07-04 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-04 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+2026-07-04 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-04 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-07-04 00:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-07-04 00:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-07-04 00:00 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large "HTTP/1.1 200 OK"
+2026-07-04 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-04 00:00 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+Loading weights:   0%|          | 0/391 [00:00<?, ?it/s]Loading weights:  69%|██████▉   | 269/391 [00:00<00:00, 2678.11it/s]Loading weights: 100%|██████████| 391/391 [00:00<00:00, 2875.84it/s]
+2026-07-04 00:00 | INFO | E5-large loaded
+2026-07-04 00:00 | INFO | ============================================================
+2026-07-04 00:00 | INFO | Bucket B incremental update — starting
+2026-07-04 00:00 | INFO | ============================================================
+2026-07-04 00:00 | INFO | Fetching BBC_Arabic...
+2026-07-04 00:00 | INFO |   BBC_Arabic: 11 new articles
+2026-07-04 00:00 | INFO | Fetching CNN_Arabic...
+2026-07-04 00:00 | INFO |   CNN_Arabic: 20 new articles
+2026-07-04 00:00 | INFO | Fetching RT_Arabic...
+2026-07-04 00:04 | INFO |   RT_Arabic: 99 new articles
+2026-07-04 00:04 | INFO | Fetching DW_Arabic...
+2026-07-04 00:04 | INFO |   DW_Arabic: 12 new articles
+2026-07-04 00:04 | INFO | Fetching Asharq_AlAwsat...
+2026-07-04 00:09 | INFO |   Asharq_AlAwsat: 226 new articles
+2026-07-04 00:09 | INFO | Fetching Euronews_Arabic...
+2026-07-04 00:10 | INFO |   Euronews_Arabic: 50 new articles
+2026-07-04 00:10 | INFO | Fetching Sputnik_Arabic...
+2026-07-04 00:11 | INFO |   Sputnik_Arabic: 64 new articles
+2026-07-04 00:11 | INFO | Fetched 482 new articles total
+2026-07-04 00:11 | INFO | Extracted 6168 new propositions from 482 articles
+2026-07-04 00:11 | INFO | Embedding new propositions...
+2026-07-04 01:55 | INFO | Chroma Bucket B currently has 72283 docs
+2026-07-04 01:56 | INFO | Chroma updated: 72283 → 78451 docs
+2026-07-04 01:56 | INFO | Propositions CSV updated: 77982 → 84106 rows
+2026-07-04 01:56 | INFO | Articles CSV updated: 6144 → 6626 rows
+2026-07-04 01:56 | INFO | ✅ Update complete in 6969.2s — +482 articles, +6168 propositions
+2026-07-04 16:01 | INFO | Loading E5-large model...
+2026-07-04 16:01 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-04 16:01 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+2026-07-04 16:01 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-04 16:01 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-07-04 16:01 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-07-04 16:01 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-07-04 16:01 | INFO | HTTP Request: GET https://huggingface.co/api/models/intfloat/multilingual-e5-large "HTTP/1.1 200 OK"
+2026-07-04 16:01 | INFO | HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-large/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-07-04 16:01 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/intfloat/multilingual-e5-large/3d7cfbdacd47fdda877c5cd8a79fbcc4f2a574f3/config.json "HTTP/1.1 200 OK"
+Loading weights:   0%|          | 0/391 [00:00<?, ?it/s]Loading weights: 100%|██████████| 391/391 [00:00<00:00, 4007.96it/s]
+2026-07-04 16:01 | INFO | E5-large loaded
+2026-07-04 16:01 | INFO | ============================================================
+2026-07-04 16:01 | INFO | Bucket B incremental update — starting
+2026-07-04 16:01 | INFO | ============================================================
+2026-07-04 16:01 | INFO | Fetching BBC_Arabic...
+2026-07-04 16:01 | INFO |   BBC_Arabic: 7 new articles
+2026-07-04 16:01 | INFO | Fetching CNN_Arabic...
+2026-07-04 16:01 | INFO |   CNN_Arabic: 19 new articles
+2026-07-04 16:01 | INFO | Fetching RT_Arabic...
+2026-07-04 16:06 | INFO |   RT_Arabic: 100 new articles
+2026-07-04 16:06 | INFO | Fetching DW_Arabic...
+2026-07-04 16:06 | INFO |   DW_Arabic: 8 new articles
+2026-07-04 16:06 | INFO | Fetching Asharq_AlAwsat...
+2026-07-04 16:09 | INFO |   Asharq_AlAwsat: 106 new articles
+2026-07-04 16:09 | INFO | Fetching Euronews_Arabic...
+2026-07-04 16:09 | INFO |   Euronews_Arabic: 21 new articles
+2026-07-04 16:09 | INFO | Fetching Sputnik_Arabic...
+2026-07-04 16:10 | INFO |   Sputnik_Arabic: 31 new articles
+2026-07-04 16:10 | INFO | Fetched 292 new articles total
+2026-07-04 16:10 | INFO | Extracted 3217 new propositions from 292 articles
+2026-07-04 16:10 | INFO | Embedding new propositions...
+2026-07-04 17:07 | INFO | Chroma Bucket B currently has 78451 docs
+2026-07-04 17:10 | INFO | Chroma updated: 78451 → 81668 docs
+2026-07-04 17:10 | INFO | Propositions CSV updated: 84106 → 87279 rows
+2026-07-04 17:10 | INFO | Articles CSV updated: 6626 → 6918 rows
+2026-07-04 17:10 | INFO | ✅ Update complete in 4163.9s — +292 articles, +3217 propositions
